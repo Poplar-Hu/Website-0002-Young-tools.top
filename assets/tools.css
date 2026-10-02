@@ -230,11 +230,19 @@ p { margin: 0; }
    主站：max-w-3xl 左对齐 / h1 clamp(2.5rem,8vw,5rem) leading-tight /
         段落 clamp(1rem,2vw,1.25rem) / 两个 px-8 py-3 的圆角按钮 / 右侧两个模糊光斑
    ──────────────────────────────────────────────────────────────────────── */
-/* 只用 padding-top/bottom —— 用 padding 简写会把 .wrap 的左右内边距清零，
-   窄屏下正文就贴到屏幕边缘了 */
+/* 与主站一致：hero 占满一屏并垂直居中。
+   否则下一个分节的标题会从首屏底部露出一截，看着像页面没排好。
+   只用 padding-top/bottom —— 用 padding 简写会把 .wrap 的左右内边距清零，
+   窄屏下正文就贴到屏幕边缘了。 */
 .hero {
   position: relative; overflow: hidden;
-  padding-top: 132px; padding-bottom: 48px;
+  min-height: 100vh;
+  display: flex; align-items: center;
+  padding-top: 96px; padding-bottom: 48px;
+}
+/* 移动端浏览器地址栏会收放，100vh 会偏大；dvh 更贴合实际可视高度 */
+@supports (min-height: 100dvh) {
+  .hero { min-height: 100dvh; }
 }
 .hero-glow { position: absolute; top: 0; right: 0; width: 55%; height: 100%; pointer-events: none; }
 .hero-glow::before, .hero-glow::after {
@@ -281,7 +289,8 @@ p { margin: 0; }
 .btn-hero-ghost:hover { box-shadow: 0 20px 25px -5px rgba(15, 23, 42, .18); }
 
 /* ── Section：对齐主站的 badge + h2 + 描述 三段式 ───────────────────────── */
-.section { padding-top: 32px; padding-bottom: 8px; }
+/* 首屏已经被 hero 占满，这里留出与主站分节相当的上间距 */
+.section { padding-top: 80px; padding-bottom: 16px; }
 .section-head { text-align: center; max-width: 44rem; margin: 0 auto 56px; }
 .section-head .badge { margin-bottom: 16px; }
 .section-head h2 {
