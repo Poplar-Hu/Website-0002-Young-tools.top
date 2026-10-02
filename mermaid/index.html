@@ -1,0 +1,387 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Mermaid 图表 | Populus Hu 工具箱</title>
+<meta name="description" content="浏览器本地运行的 Mermaid 图表渲染工具，支持流程图、时序图、甘特图等，可导出 SVG / PNG。">
+
+<link rel="icon" href="/assets/icon.ico" sizes="32x32">
+<link rel="stylesheet" href="/assets/font-awesome.min.css">
+<link rel="stylesheet" href="/assets/tools.css">
+
+<script src="/assets/tools.js"></script>
+<!-- mermaid 有 2.5 MB，用 defer 避免阻塞首屏渲染 -->
+<script defer src="/assets/vendor/mermaid.min.js"></script>
+</head>
+<body>
+
+<header class="navbar" id="navbar">
+  <div class="nav-decoration"></div>
+  <div class="nav-inner">
+    <a class="brand" href="/">
+      <i class="fa fa-connectdevelop"></i>Populus Hu<small>工具箱</small>
+    </a>
+    <button class="menu-toggle" id="menu-toggle" aria-label="菜单" aria-expanded="false" aria-controls="nav-links">
+      <i class="fa fa-bars"></i>
+    </button>
+    <nav class="nav-links" id="nav-links">
+      <a href="/">工具箱</a>
+      <a href="/markdown/">Markdown</a>
+      <a href="/mermaid/" class="is-active">Mermaid</a>
+      <a href="https://who-young.top" class="back"><i class="fa fa-home mr-1"></i>返回主站</a>
+    </nav>
+  </div>
+</header>
+
+<main class="tool-shell">
+
+  <div class="tool-head">
+    <span class="badge"><i class="fa fa-sitemap"></i> 在线工具</span>
+    <h1>Mermaid 图表</h1>
+    <p>用文本画图。左侧改代码，右侧立刻出图；画完可导出 SVG 或 PNG。</p>
+  </div>
+
+  <div id="load-warn" class="notice notice-error hidden">
+    <i class="fa fa-exclamation-triangle"></i>
+    <div>渲染引擎没有加载成功。如果你是用 <code>file://</code> 直接打开本页，请改用本地服务器访问。</div>
+  </div>
+
+  <div class="tool-card-main">
+
+    <div class="tool-bar">
+      <select id="tpl-select" aria-label="选择图表模板">
+        <option value="">选择模板…</option>
+      </select>
+      <button class="btn btn-sm" id="btn-svg"><i class="fa fa-download"></i> 导出 SVG</button>
+      <button class="btn btn-sm" id="btn-png"><i class="fa fa-picture-o"></i> 导出 PNG</button>
+      <button class="btn btn-sm" id="btn-copy"><i class="fa fa-clipboard"></i> 复制代码</button>
+      <span class="spacer"></span>
+      <span class="stat" id="stat"></span>
+      <button class="btn btn-sm" id="btn-clear"><i class="fa fa-trash-o"></i> 清空</button>
+    </div>
+
+    <div class="panes">
+      <div class="pane">
+        <div class="pane-label">
+          <span><i class="fa fa-pencil"></i> Mermaid 代码</span>
+        </div>
+        <textarea class="editor" id="editor" spellcheck="false"
+          placeholder="flowchart LR&#10;  A[开始] --> B{判断}&#10;  B -->|是| C[继续]&#10;  B -->|否| D[结束]"></textarea>
+      </div>
+      <div class="pane">
+        <div class="pane-label">
+          <span><i class="fa fa-eye"></i> 预览</span>
+          <span id="hint" style="text-transform:none;letter-spacing:0"></span>
+        </div>
+        <div class="preview">
+          <div class="mmd-canvas" id="canvas">
+            <div class="mmd-empty"><i class="fa fa-spinner fa-spin"></i> 正在加载渲染引擎…</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <div id="err-box" class="notice notice-error hidden" style="margin-top:16px">
+    <i class="fa fa-exclamation-triangle"></i>
+    <div><strong>语法错误</strong><div id="err-msg" style="margin-top:4px"></div></div>
+  </div>
+</main>
+
+<footer class="site-footer">
+  <div class="wrap">
+    <div>
+      <a class="brand" href="https://who-young.top"><i class="fa fa-connectdevelop"></i>Populus Hu</a>
+      <p>我的数字家园，连接你我</p>
+    </div>
+    <nav>
+      <a href="https://who-young.top">主站首页</a>
+      <a href="/">工具箱</a>
+      <a href="/markdown/">Markdown</a>
+      <a href="https://who-young.top/#contact">联系我</a>
+    </nav>
+  </div>
+  <div class="copy">© 2026 Populus Hu | 保留所有权利。</div>
+</footer>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  'use strict';
+
+  const editor  = document.getElementById('editor');
+  const canvas  = document.getElementById('canvas');
+  const stat    = document.getElementById('stat');
+  const hint    = document.getElementById('hint');
+  const errBox  = document.getElementById('err-box');
+  const errMsg  = document.getElementById('err-msg');
+  const tplSel  = document.getElementById('tpl-select');
+  const STORAGE = 'tools.mermaid.content';
+
+  /* ── 模板 ──────────────────────────────────────────────────────────── */
+  const TEMPLATES = {
+    '流程图 flowchart': `flowchart LR
+    A([开始]) --> B{条件判断}
+    B -->|满足| C[执行操作]
+    B -->|不满足| D[跳过]
+    C --> E[(数据库)]
+    D --> E
+    E --> F([结束])`,
+
+    '时序图 sequenceDiagram': `sequenceDiagram
+    autonumber
+    participant U as 用户
+    participant S as 服务端
+    participant D as 数据库
+    U->>S: 发起请求
+    activate S
+    S->>D: 查询数据
+    D-->>S: 返回结果
+    S-->>U: 响应
+    deactivate S
+    Note over U,D: 一次完整的往返`,
+
+    '类图 classDiagram': `classDiagram
+    class 站点 {
+      +String 域名
+      +部署()
+      +回滚()
+    }
+    class 静态站 {
+      +String 根目录
+      +构建()
+    }
+    class 工具站 {
+      +List 工具列表
+    }
+    站点 <|-- 静态站
+    静态站 <|-- 工具站`,
+
+    '状态图 stateDiagram': `stateDiagram-v2
+    [*] --> 待办
+    待办 --> 进行中: 开始
+    进行中 --> 待评审: 提交
+    待评审 --> 进行中: 打回
+    待评审 --> 已完成: 通过
+    已完成 --> [*]`,
+
+    '甘特图 gantt': `gantt
+    title 建站排期
+    dateFormat YYYY-MM-DD
+    axisFormat %m-%d
+    section 准备
+    买域名与服务器     :done,    a1, 2026-09-25, 5d
+    环境搭建           :done,    a2, after a1, 4d
+    section 主体
+    主站上线           :active,  b1, 2026-10-02, 3d
+    工具站             :         b2, after b1, 4d
+    section 收尾
+    备案与解析         :         c1, after b2, 10d`,
+
+    '饼图 pie': `pie showData
+    title 时间都去哪儿了
+    "写代码" : 40
+    "查文档" : 25
+    "改 bug" : 20
+    "发呆"   : 15`,
+
+    'Git 图 gitGraph': `gitGraph
+    commit id: "初始化"
+    branch feature
+    commit id: "写页面"
+    commit id: "改样式"
+    checkout main
+    merge feature
+    commit id: "发布"`,
+  };
+
+  for (const name of Object.keys(TEMPLATES)) {
+    const opt = document.createElement('option');
+    opt.value = name;
+    opt.textContent = name;
+    tplSel.appendChild(opt);
+  }
+
+  /* ── 初始化 mermaid ────────────────────────────────────────────────── */
+  const libOk = typeof window.mermaid !== 'undefined';
+  if (!libOk) {
+    document.getElementById('load-warn').classList.remove('hidden');
+    canvas.innerHTML = '<div class="mmd-empty">渲染引擎不可用</div>';
+    return;
+  }
+
+  mermaid.initialize({
+    startOnLoad: false,
+    theme: 'default',
+    // 不用 HTML 标签，改用纯 SVG <text>：
+    // 这样导出的 SVG 序列化后不会被 foreignObject 污染，PNG 导出才正常
+    htmlLabels: false,
+    securityLevel: 'strict',
+    fontFamily: 'system-ui, -apple-system, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif',
+    flowchart: { htmlLabels: false, useMaxWidth: true, curve: 'basis' },
+  });
+
+  /* ── 渲染 ──────────────────────────────────────────────────────────── */
+  let seq = 0;
+  let rendering = false;
+  let pending = false;
+
+  function showError(msg) {
+    errMsg.textContent = msg;
+    errBox.classList.remove('hidden');
+    hint.textContent = '渲染失败';
+  }
+  function clearError() {
+    errBox.classList.add('hidden');
+    hint.textContent = '';
+  }
+
+  async function render() {
+    const code = editor.value.trim();
+    stat.textContent = `${editor.value.length} 字`;
+
+    if (!code) {
+      canvas.innerHTML = '<div class="mmd-empty">在左边写点 Mermaid 代码试试</div>';
+      clearError();
+      try { localStorage.setItem(STORAGE, ''); } catch {}
+      return;
+    }
+
+    // 避免并发渲染互相覆盖
+    if (rendering) { pending = true; return; }
+    rendering = true;
+
+    const id = 'mmd-' + (++seq);
+    try {
+      const { svg } = await mermaid.render(id, code);
+      canvas.innerHTML = svg;
+      clearError();
+    } catch (err) {
+      const raw = String(err && err.message ? err.message : err);
+      showError(raw.split('\n').slice(0, 4).join('\n'));
+    } finally {
+      rendering = false;
+      // mermaid 渲染失败时可能在 body 上留下临时元素，清掉
+      document.querySelectorAll('body > div[id^="dmmd-"], body > div[id^="mmd-"]').forEach((el) => {
+        if (!canvas.contains(el)) el.remove();
+      });
+      if (pending) { pending = false; render(); }
+    }
+
+    try { localStorage.setItem(STORAGE, editor.value); } catch {}
+  }
+
+  const renderDebounced = Tools.debounce(render, 400);
+
+  /* ── 初始化内容 ────────────────────────────────────────────────────── */
+  let restored = '';
+  try { restored = localStorage.getItem(STORAGE) || ''; } catch {}
+  editor.value = restored || TEMPLATES['流程图 flowchart'];
+  render();
+
+  editor.addEventListener('input', renderDebounced);
+  editor.addEventListener('keydown', (e) => {
+    if (e.key !== 'Tab') return;
+    e.preventDefault();
+    const s = editor.selectionStart, t = editor.selectionEnd;
+    editor.value = editor.value.slice(0, s) + '  ' + editor.value.slice(t);
+    editor.selectionStart = editor.selectionEnd = s + 2;
+    renderDebounced();
+  });
+
+  tplSel.addEventListener('change', () => {
+    const v = tplSel.value;
+    if (!v || !TEMPLATES[v]) return;
+    editor.value = TEMPLATES[v];
+    render();
+    Tools.toast(`已载入「${v.split(' ')[0]}」模板`, 'info');
+    tplSel.value = '';
+  });
+
+  /* ── 导出 ──────────────────────────────────────────────────────────── */
+
+  /** 取出当前 SVG 的独立副本，并确保带 xmlns 与明确的宽高 */
+  function currentSvg() {
+    const svg = canvas.querySelector('svg');
+    if (!svg) { Tools.toast('还没有可导出的图', 'warn'); return null; }
+    const clone = svg.cloneNode(true);
+    clone.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
+    clone.setAttribute('xmlns:xlink', 'http://www.w3.org/1999/xlink');
+    clone.removeAttribute('style');
+
+    const vb = (svg.getAttribute('viewBox') || '').split(/[\s,]+/).map(Number);
+    let w = vb[2], h = vb[3];
+    if (!w || !h) {
+      const b = svg.getBBox();
+      w = Math.ceil(b.width) || 800;
+      h = Math.ceil(b.height) || 600;
+    }
+    clone.setAttribute('width', w);
+    clone.setAttribute('height', h);
+    return { clone, w, h };
+  }
+
+  document.getElementById('btn-svg').addEventListener('click', () => {
+    const got = currentSvg();
+    if (!got) return;
+    const text = '<?xml version="1.0" encoding="UTF-8"?>\n' + new XMLSerializer().serializeToString(got.clone);
+    Tools.downloadText(`mermaid-${Tools.stamp()}.svg`, text, 'image/svg+xml;charset=utf-8');
+    Tools.toast('已导出 SVG', 'ok');
+  });
+
+  document.getElementById('btn-png').addEventListener('click', async () => {
+    const got = currentSvg();
+    if (!got) return;
+    const scale = 2; // 2 倍图，贴进文档里不糊
+    try {
+      const svgText = new XMLSerializer().serializeToString(got.clone);
+      const url = URL.createObjectURL(new Blob([svgText], { type: 'image/svg+xml;charset=utf-8' }));
+      const img = new Image();
+      await new Promise((res, rej) => { img.onload = res; img.onerror = () => rej(new Error('SVG 载入失败')); img.src = url; });
+
+      const c = document.createElement('canvas');
+      c.width = got.w * scale;
+      c.height = got.h * scale;
+      const ctx = c.getContext('2d');
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(0, 0, c.width, c.height);
+      ctx.drawImage(img, 0, 0, c.width, c.height);
+      URL.revokeObjectURL(url);
+
+      await new Promise((res, rej) => {
+        c.toBlob((b) => {
+          if (!b) { rej(new Error('画布导出失败')); return; }
+          Tools.downloadBlob(`mermaid-${Tools.stamp()}.png`, b);
+          res();
+        }, 'image/png');
+      });
+      Tools.toast('已导出 PNG', 'ok');
+    } catch (err) {
+      Tools.toast('PNG 导出失败：' + err.message, 'error');
+    }
+  });
+
+  document.getElementById('btn-copy').addEventListener('click', async () => {
+    const ok = await Tools.copy(editor.value);
+    Tools.toast(ok ? '已复制代码' : '复制失败', ok ? 'ok' : 'error');
+  });
+
+  document.getElementById('btn-clear').addEventListener('click', () => {
+    editor.value = '';
+    render();
+    editor.focus();
+  });
+
+  document.addEventListener('keydown', (e) => {
+    if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 's') {
+      e.preventDefault();
+      document.getElementById('btn-svg').click();
+    }
+  });
+});
+</script>
+
+</body>
+</html>

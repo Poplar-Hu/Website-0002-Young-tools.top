@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Markdown 预览 | Populus Hu 工具箱</title>
+<meta name="description" content="浏览器本地运行的 Markdown 实时预览工具，支持代码高亮、表格、任务列表，可导入导出。">
+
+<link rel="icon" href="/assets/icon.ico" sizes="32x32">
+<link rel="stylesheet" href="/assets/font-awesome.min.css">
+<link rel="stylesheet" href="/assets/vendor/github.min.css">
+<link rel="stylesheet" href="/assets/tools.css">
+
+<script src="/assets/tools.js"></script>
+<script src="/assets/vendor/marked.min.js"></script>
+<script src="/assets/vendor/purify.min.js"></script>
+<script src="/assets/vendor/highlight.min.js"></script>
+</head>
+<body>
+
+<header class="navbar" id="navbar">
+  <div class="nav-decoration"></div>
+  <div class="nav-inner">
+    <a class="brand" href="/">
+      <i class="fa fa-connectdevelop"></i>Populus Hu<small>工具箱</small>
+    </a>
+    <button class="menu-toggle" id="menu-toggle" aria-label="菜单" aria-expanded="false" aria-controls="nav-links">
+      <i class="fa fa-bars"></i>
+    </button>
+    <nav class="nav-links" id="nav-links">
+      <a href="/">工具箱</a>
+      <a href="/markdown/" class="is-active">Markdown</a>
+      <a href="/mermaid/">Mermaid</a>
+      <a href="https://who-young.top" class="back"><i class="fa fa-home mr-1"></i>返回主站</a>
+    </nav>
+  </div>
+</header>
+
+<main class="tool-shell">
+
+  <div class="tool-head">
+    <span class="badge"><i class="fa fa-file-text-o"></i> 在线工具</span>
+    <h1>Markdown 预览</h1>
+    <p>左边写、右边看。内容只留在浏览器里，可以关掉页面再回来。</p>
+  </div>
+
+  <div id="load-warn" class="notice notice-error hidden">
+    <i class="fa fa-exclamation-triangle"></i>
+    <div>渲染库没有加载成功。如果你是用 <code>file://</code> 直接打开本页，请改用本地服务器访问。</div>
+  </div>
+
+  <div class="tool-card-main">
+
+    <div class="tool-bar">
+      <button class="btn btn-sm" id="btn-open"><i class="fa fa-folder-open-o"></i> 打开文件</button>
+      <button class="btn btn-sm" id="btn-save"><i class="fa fa-download"></i> 下载 .md</button>
+      <button class="btn btn-sm" id="btn-export"><i class="fa fa-code"></i> 导出 HTML</button>
+      <button class="btn btn-sm" id="btn-copy"><i class="fa fa-clipboard"></i> 复制 HTML</button>
+      <span class="spacer"></span>
+      <span class="stat" id="stat">0 字 · 0 行</span>
+      <button class="btn btn-sm" id="btn-sample"><i class="fa fa-magic"></i> 示例</button>
+      <button class="btn btn-sm" id="btn-clear"><i class="fa fa-trash-o"></i> 清空</button>
+    </div>
+
+    <div class="panes">
+      <div class="pane">
+        <div class="pane-label">
+          <span><i class="fa fa-pencil"></i> Markdown 源码</span>
+          <span style="text-transform:none;letter-spacing:0">可直接拖入 .md 文件</span>
+        </div>
+        <textarea class="editor" id="editor" spellcheck="false"
+          placeholder="在这里写 Markdown…&#10;&#10;也可以把 .md 文件拖进来。"></textarea>
+      </div>
+      <div class="pane">
+        <div class="pane-label">
+          <span><i class="fa fa-eye"></i> 预览</span>
+          <span id="hint" style="text-transform:none;letter-spacing:0"></span>
+        </div>
+        <div class="preview md-body" id="preview"></div>
+      </div>
+    </div>
+
+  </div>
+</main>
+
+<footer class="site-footer">
+  <div class="wrap">
+    <div>
+      <a class="brand" href="https://who-young.top"><i class="fa fa-connectdevelop"></i>Populus Hu</a>
+      <p>我的数字家园，连接你我</p>
+    </div>
+    <nav>
+      <a href="https://who-young.top">主站首页</a>
+      <a href="/">工具箱</a>
+      <a href="/mermaid/">Mermaid</a>
+      <a href="https://who-young.top/#contact">联系我</a>
+    </nav>
+  </div>
+  <div class="copy">© 2026 Populus Hu | 保留所有权利。</div>
+</footer>
+
+<input type="file" id="file-input" accept=".md,.markdown,.txt,text/markdown,text/plain" hidden>
+
+<!-- 示例内容放在这里，避免在 JS 字符串里转义反引号 -->
+<script type="text/plain" id="sample-md">
+# Markdown 预览
+
+这是一个**纯前端**的 Markdown 渲染器，依赖库都放在本站，不引用外部 CDN。
+
+## 支持的语法
+
+- 粗体、*斜体*、~~删除线~~、`行内代码`
+- 有序 / 无序列表、嵌套列表
+- [链接](https://who-young.top) 与图片
+- 引用、表格、分隔线
+
+### 任务列表
+
+- [x] 解析 Markdown
+- [x] 代码高亮
+- [ ] 想加什么自己改
+
+### 表格
+
+| 语法 | 效果 | 备注 |
+| --- | --- | --- |
+| `# 标题` | 一级标题 | 最多六级 |
+| `**粗体**` | **粗体** | |
+| `` `代码` `` | `行内代码` | |
+
+### 代码高亮
+
+```javascript
+// 自动识别语言并高亮
+function greet(name) {
+  const list = ['world', 'Markdown', 'Mermaid'];
+  return list.map((x) => `Hello, ${x}!`);
+}
+console.log(greet());
+```
+
+```python
+def fib(n: int):
+    a, b = 0, 1
+    for _ in range(n):
+        yield a
+        a, b = b, a + b
+```
+
+### 引用
+
+> 水至清则无鱼，人至察则无徒。
+>
+> —— 也可以是多段引用
+
+---
+
+就这样，试试改一改上面的内容。
+</script>
+
+<script>
+(() => {
+  'use strict';
+
+  const editor   = document.getElementById('editor');
+  const preview  = document.getElementById('preview');
+  const stat     = document.getElementById('stat');
+  const hint     = document.getElementById('hint');
+  const fileIn   = document.getElementById('file-input');
+  const STORAGE  = 'tools.markdown.content';
+
+  /* 依赖是否就位 */
+  const libsOk = typeof window.marked === 'function' || typeof window.marked?.parse === 'function';
+  if (!libsOk || typeof window.DOMPurify === 'undefined') {
+    document.getElementById('load-warn').classList.remove('hidden');
+  }
+  if (libsOk) {
+    marked.setOptions({ gfm: true, breaks: true });
+  }
+
+  /* ── 渲染 ──────────────────────────────────────────────────────────── */
+  function render() {
+    const src = editor.value;
+    if (!libsOk) return;
+
+    let html;
+    try {
+      html = marked.parse(src);
+    } catch (err) {
+      preview.innerHTML = `<div class="notice notice-error"><i class="fa fa-exclamation-triangle"></i><div>解析失败：${err.message}</div></div>`;
+      return;
+    }
+
+    // 输入的是你自己的内容，但仍然过一遍 DOMPurify：
+    // 万一把别人给的 markdown 粘进来，不至于直接执行脚本
+    preview.innerHTML = DOMPurify.sanitize(html, { USE_PROFILES: { html: true } });
+
+    if (typeof hljs !== 'undefined') {
+      preview.querySelectorAll('pre code').forEach((el) => {
+        if (!el.dataset.highlighted) {
+          hljs.highlightElement(el);
+          el.dataset.highlighted = '1';
+        }
+      });
+    }
+
+    const chars = src.length;
+    const lines = src ? src.split('\n').length : 0;
+    stat.textContent = `${chars} 字 · ${lines} 行`;
+    hint.textContent = src ? '' : '输入内容后这里会实时更新';
+
+    try { localStorage.setItem(STORAGE, src); } catch { /* 隐私模式下忽略 */ }
+  }
+
+  const renderDebounced = Tools.debounce(render, 150);
+
+  /* ── 初始化 ────────────────────────────────────────────────────────── */
+  const sample = document.getElementById('sample-md').textContent.replace(/^\n/, '').replace(/\s+$/, '');
+  let restored = '';
+  try { restored = localStorage.getItem(STORAGE) || ''; } catch { /* 忽略 */ }
+  editor.value = restored || sample;
+  render();
+
+  editor.addEventListener('input', renderDebounced);
+
+  /* Tab 键插入两个空格而不是跳出输入框 */
+  editor.addEventListener('keydown', (e) => {
+    if (e.key !== 'Tab') return;
+    e.preventDefault();
+    const s = editor.selectionStart, t = editor.selectionEnd;
+    editor.value = editor.value.slice(0, s) + '  ' + editor.value.slice(t);
+    editor.selectionStart = editor.selectionEnd = s + 2;
+    renderDebounced();
+  });
+
+  /* ── 工具栏 ────────────────────────────────────────────────────────── */
+
+  document.getElementById('btn-open').addEventListener('click', () => fileIn.click());
+
+  fileIn.addEventListener('change', async () => {
+    const f = fileIn.files && fileIn.files[0];
+    if (!f) return;
+    try {
+      editor.value = await Tools.readTextFile(f);
+      render();
+      Tools.toast(`已载入 ${f.name}`, 'ok');
+    } catch {
+      Tools.toast('文件读取失败', 'error');
+    }
+    fileIn.value = '';
+  });
+
+  document.getElementById('btn-save').addEventListener('click', () => {
+    Tools.downloadText(`markdown-${Tools.stamp()}.md`, editor.value, 'text/markdown;charset=utf-8');
+    Tools.toast('已下载 .md', 'ok');
+  });
+
+  document.getElementById('btn-copy').addEventListener('click', async () => {
+    const ok = await Tools.copy(preview.innerHTML);
+    Tools.toast(ok ? '已复制渲染后的 HTML' : '复制失败，请手动选择', ok ? 'ok' : 'error');
+  });
+
+  document.getElementById('btn-export').addEventListener('click', () => {
+    const title = (editor.value.match(/^#\s+(.+)$/m) || [, 'Markdown 文档'])[1];
+    const doc = `<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>${title.replace(/[<>&]/g, '')}</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/highlight.js@11/styles/github.min.css">
+<style>
+  body { max-width: 46rem; margin: 0 auto; padding: 2.5rem 1.25rem 5rem; line-height: 1.8;
+         font-family: system-ui, -apple-system, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+         color: #1E293B; }
+  h1, h2 { border-bottom: 1px solid #E5E7EB; padding-bottom: .3em; }
+  pre { background: #F6F8FA; border: 1px solid #E5E7EB; border-radius: 8px; padding: 14px 16px; overflow: auto; }
+  code { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: .9em; }
+  :not(pre) > code { background: #F3F4F6; padding: .15em .4em; border-radius: 5px; }
+  blockquote { margin: 0 0 1em; padding: .6em 1em; border-left: 4px solid #3B82F6; background: #F5F7FA; color: #4B5563; }
+  table { border-collapse: collapse; width: 100%; }
+  th, td { border: 1px solid #E5E7EB; padding: 8px 12px; text-align: left; }
+  th { background: #F5F7FA; }
+  img { max-width: 100%; }
+</style>
+</head>
+<body>
+${preview.innerHTML}
+</body>
+</html>`;
+    Tools.downloadText(`markdown-${Tools.stamp()}.html`, doc, 'text/html;charset=utf-8');
+    Tools.toast('已导出 HTML', 'ok');
+  });
+
+  document.getElementById('btn-sample').addEventListener('click', () => {
+    editor.value = sample;
+    render();
+    Tools.toast('已载入示例', 'info');
+  });
+
+  document.getElementById('btn-clear').addEventListener('click', () => {
+    editor.value = '';
+    render();
+    editor.focus();
+  });
+
+  /* ── 拖放 .md 文件 ─────────────────────────────────────────────────── */
+  ['dragenter', 'dragover'].forEach((ev) =>
+    preview.addEventListener(ev, (e) => { e.preventDefault(); preview.classList.add('is-drop'); })
+  );
+  ['dragleave', 'drop'].forEach((ev) =>
+    preview.addEventListener(ev, () => preview.classList.remove('is-drop'))
+  );
+  preview.addEventListener('drop', async (e) => {
+    e.preventDefault();
+    const f = e.dataTransfer?.files?.[0];
+    if (!f) return;
+    try {
+      editor.value = await Tools.readTextFile(f);
+      render();
+      Tools.toast(`已载入 ${f.name}`, 'ok');
+    } catch {
+      Tools.toast('只能拖入文本文件', 'error');
+    }
+  });
+
+  /* ── 快捷键 ────────────────────────────────────────────────────────── */
+  document.addEventListener('keydown', (e) => {
+    if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 's') {
+      e.preventDefault();
+      document.getElementById('btn-save').click();
+    }
+  });
+})();
+</script>
+
+</body>
+</html>

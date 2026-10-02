@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>在线工具箱 | Populus Hu</title>
+<meta name="description" content="Populus Hu 的自用小工具：Markdown 实时预览、Mermaid 图表渲染。全部在浏览器本地运行，不上传任何数据。">
+
+<link rel="icon" href="/assets/icon.ico" sizes="32x32">
+<link rel="stylesheet" href="/assets/font-awesome.min.css">
+<link rel="stylesheet" href="/assets/tools.css">
+<script src="/assets/tools.js"></script>
+</head>
+<body>
+
+<header class="navbar" id="navbar">
+  <div class="nav-decoration"></div>
+  <div class="nav-inner">
+    <a class="brand" href="/">
+      <i class="fa fa-connectdevelop"></i>Populus Hu<small>工具箱</small>
+    </a>
+    <button class="menu-toggle" id="menu-toggle" aria-label="菜单" aria-expanded="false" aria-controls="nav-links">
+      <i class="fa fa-bars"></i>
+    </button>
+    <nav class="nav-links" id="nav-links">
+      <a href="/" class="is-active">工具箱</a>
+      <a href="/markdown/">Markdown</a>
+      <a href="/mermaid/">Mermaid</a>
+      <a href="https://who-young.top" class="back"><i class="fa fa-home mr-1"></i>返回主站</a>
+    </nav>
+  </div>
+</header>
+
+<main>
+  <section class="hero wrap">
+    <span class="badge"><i class="fa fa-wrench"></i> 在线工具</span>
+    <h1>随手可用的<br><span class="grad">在线工具箱</span></h1>
+    <p>
+      两个完全跑在浏览器本地的工具。文字和图表<strong>不会上传到任何服务器</strong>，
+      断网也能用 —— 所有依赖都放在本站，不引用外部 CDN。
+    </p>
+  </section>
+
+  <section class="wrap">
+    <div class="grid cols-2">
+
+      <a class="card card-hover tool-card" href="/markdown/">
+        <div class="icon bg-blue"><i class="fa fa-file-text-o"></i></div>
+        <h2>Markdown 预览</h2>
+        <p>
+          左边写、右边看，实时渲染。支持表格、任务列表、代码高亮，
+          可以直接拖入 <code>.md</code> 文件，也能导出成 HTML。
+        </p>
+        <span class="go">打开工具 <i class="fa fa-arrow-right"></i></span>
+      </a>
+
+      <a class="card card-hover tool-card" href="/mermaid/">
+        <div class="icon bg-pink"><i class="fa fa-sitemap"></i></div>
+        <h2>Mermaid 图表</h2>
+        <p>
+          用文本画流程图、时序图、甘特图、类图。实时预览带错误提示，
+          画完可以导出 SVG 或 PNG。
+        </p>
+        <span class="go">打开工具 <i class="fa fa-arrow-right"></i></span>
+      </a>
+
+    </div>
+
+    <div class="notice notice-info" style="margin-bottom:48px">
+      <i class="fa fa-info-circle"></i>
+      <div>
+        这两个工具都是纯前端实现，页面里的 Markdown 与 Mermaid 处理逻辑在本地执行。
+        唯一的网络请求是加载页面自身 —— 也就是说，把页面存下来，离线一样能打开。
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer class="site-footer">
+  <div class="wrap">
+    <div>
+      <a class="brand" href="https://who-young.top"><i class="fa fa-connectdevelop"></i>Populus Hu</a>
+      <p>我的数字家园，连接你我</p>
+    </div>
+    <nav>
+      <a href="https://who-young.top">主站首页</a>
+      <a href="/markdown/">Markdown</a>
+      <a href="/mermaid/">Mermaid</a>
+      <a href="https://who-young.top/#contact">联系我</a>
+    </nav>
+  </div>
+  <div class="copy">© 2026 Populus Hu | 保留所有权利。</div>
+</footer>
+
+</body>
+</html>
