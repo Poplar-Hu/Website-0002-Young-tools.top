@@ -37,7 +37,7 @@
   </div>
 </header>
 
-<main class="tool-shell">
+<main class="tool-shell wrap">
 
   <div class="tool-head">
     <span class="badge"><i class="fa fa-file-text-o"></i> 在线工具</span>
@@ -67,7 +67,7 @@
       <div class="pane">
         <div class="pane-label">
           <span><i class="fa fa-pencil"></i> Markdown 源码</span>
-          <span style="text-transform:none;letter-spacing:0">可直接拖入 .md 文件</span>
+          <span class="side">可直接拖入 .md 文件</span>
         </div>
         <textarea class="editor" id="editor" spellcheck="false"
           placeholder="在这里写 Markdown…&#10;&#10;也可以把 .md 文件拖进来。"></textarea>
@@ -75,7 +75,7 @@
       <div class="pane">
         <div class="pane-label">
           <span><i class="fa fa-eye"></i> 预览</span>
-          <span id="hint" style="text-transform:none;letter-spacing:0"></span>
+          <span id="hint" class="side"></span>
         </div>
         <div class="preview md-body" id="preview"></div>
       </div>
@@ -86,18 +86,23 @@
 
 <footer class="site-footer">
   <div class="wrap">
-    <div>
-      <a class="brand" href="https://who-young.top"><i class="fa fa-connectdevelop"></i>Populus Hu</a>
-      <p>我的数字家园，连接你我</p>
+    <div class="foot-top">
+      <div>
+        <a class="brand" href="https://who-young.top"><i class="fa fa-connectdevelop"></i>Populus Hu</a>
+        <p class="foot-desc">我的数字家园，连接你我</p>
+      </div>
+      <nav class="foot-nav">
+        <a href="https://who-young.top">主站首页</a>
+        <a href="/">工具箱</a>
+        <a href="/mermaid/">Mermaid</a>
+        <a href="https://who-young.top/#contact">联系我</a>
+      </nav>
     </div>
-    <nav>
-      <a href="https://who-young.top">主站首页</a>
-      <a href="/">工具箱</a>
-      <a href="/mermaid/">Mermaid</a>
-      <a href="https://who-young.top/#contact">联系我</a>
-    </nav>
+    <div class="foot-bottom">
+      <p>© 2026 Populus Hu | 保留所有权利。</p>
+      <a class="to-top" href="#top" id="to-top"><i class="fa fa-angle-up"></i> 回到顶部</a>
+    </div>
   </div>
-  <div class="copy">© 2026 Populus Hu | 保留所有权利。</div>
 </footer>
 
 <input type="file" id="file-input" accept=".md,.markdown,.txt,text/markdown,text/plain" hidden>
@@ -180,6 +185,17 @@ def fib(n: int):
   }
 
   /* ── 渲染 ──────────────────────────────────────────────────────────── */
+  let lastHtml = null;
+  let saveTimer = null;
+
+  // localStorage 是同步写盘，不能每敲一个键就写一次
+  function scheduleSave(value) {
+    clearTimeout(saveTimer);
+    saveTimer = setTimeout(() => {
+      try { localStorage.setItem(STORAGE, value); } catch { /* 隐私模式下忽略 */ }
+    }, 600);
+  }
+
   function render() {
     const src = editor.value;
     if (!libsOk) return;
@@ -188,21 +204,24 @@ def fib(n: int):
     try {
       html = marked.parse(src);
     } catch (err) {
+      lastHtml = null;
       preview.innerHTML = `<div class="notice notice-error"><i class="fa fa-exclamation-triangle"></i><div>解析失败：${err.message}</div></div>`;
       return;
     }
 
     // 输入的是你自己的内容，但仍然过一遍 DOMPurify：
     // 万一把别人给的 markdown 粘进来，不至于直接执行脚本
-    preview.innerHTML = DOMPurify.sanitize(html, { USE_PROFILES: { html: true } });
+    const clean = DOMPurify.sanitize(html, { USE_PROFILES: { html: true } });
 
-    if (typeof hljs !== 'undefined') {
-      preview.querySelectorAll('pre code').forEach((el) => {
-        if (!el.dataset.highlighted) {
-          hljs.highlightElement(el);
-          el.dataset.highlighted = '1';
-        }
-      });
+    // 只有渲染结果真的变了才碰 DOM。
+    // 之前每敲一个键都整体替换 innerHTML，并把所有代码块重新高亮一遍，
+    // 长文档下就会明显发粘。
+    if (clean !== lastHtml) {
+      lastHtml = clean;
+      preview.innerHTML = clean;
+      if (typeof hljs !== 'undefined') {
+        preview.querySelectorAll('pre code').forEach((el) => hljs.highlightElement(el));
+      }
     }
 
     const chars = src.length;
@@ -210,10 +229,10 @@ def fib(n: int):
     stat.textContent = `${chars} 字 · ${lines} 行`;
     hint.textContent = src ? '' : '输入内容后这里会实时更新';
 
-    try { localStorage.setItem(STORAGE, src); } catch { /* 隐私模式下忽略 */ }
+    scheduleSave(src);
   }
 
-  const renderDebounced = Tools.debounce(render, 150);
+  const renderDebounced = Tools.debounce(render, 180);
 
   /* ── 初始化 ────────────────────────────────────────────────────────── */
   const sample = document.getElementById('sample-md').textContent.replace(/^\n/, '').replace(/\s+$/, '');

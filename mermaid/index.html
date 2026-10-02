@@ -35,7 +35,7 @@
   </div>
 </header>
 
-<main class="tool-shell">
+<main class="tool-shell wrap">
 
   <div class="tool-head">
     <span class="badge"><i class="fa fa-sitemap"></i> 在线工具</span>
@@ -73,7 +73,7 @@
       <div class="pane">
         <div class="pane-label">
           <span><i class="fa fa-eye"></i> 预览</span>
-          <span id="hint" style="text-transform:none;letter-spacing:0"></span>
+          <span id="hint" class="side"></span>
         </div>
         <div class="preview">
           <div class="mmd-canvas" id="canvas">
@@ -85,26 +85,31 @@
 
   </div>
 
-  <div id="err-box" class="notice notice-error hidden" style="margin-top:16px">
+  <div id="err-box" class="notice notice-error hidden mt-sm">
     <i class="fa fa-exclamation-triangle"></i>
-    <div><strong>语法错误</strong><div id="err-msg" style="margin-top:4px"></div></div>
+    <div><strong>语法错误</strong><div id="err-msg" class="mt-xs"></div></div>
   </div>
 </main>
 
 <footer class="site-footer">
   <div class="wrap">
-    <div>
-      <a class="brand" href="https://who-young.top"><i class="fa fa-connectdevelop"></i>Populus Hu</a>
-      <p>我的数字家园，连接你我</p>
+    <div class="foot-top">
+      <div>
+        <a class="brand" href="https://who-young.top"><i class="fa fa-connectdevelop"></i>Populus Hu</a>
+        <p class="foot-desc">我的数字家园，连接你我</p>
+      </div>
+      <nav class="foot-nav">
+        <a href="https://who-young.top">主站首页</a>
+        <a href="/">工具箱</a>
+        <a href="/markdown/">Markdown</a>
+        <a href="https://who-young.top/#contact">联系我</a>
+      </nav>
     </div>
-    <nav>
-      <a href="https://who-young.top">主站首页</a>
-      <a href="/">工具箱</a>
-      <a href="/markdown/">Markdown</a>
-      <a href="https://who-young.top/#contact">联系我</a>
-    </nav>
+    <div class="foot-bottom">
+      <p>© 2026 Populus Hu | 保留所有权利。</p>
+      <a class="to-top" href="#top" id="to-top"><i class="fa fa-angle-up"></i> 回到顶部</a>
+    </div>
   </div>
-  <div class="copy">© 2026 Populus Hu | 保留所有权利。</div>
 </footer>
 
 <script>
@@ -232,35 +237,59 @@ document.addEventListener('DOMContentLoaded', () => {
     errMsg.textContent = msg;
     errBox.classList.remove('hidden');
     hint.textContent = '渲染失败';
+    hint.classList.remove('busy');
   }
   function clearError() {
     errBox.classList.add('hidden');
     hint.textContent = '';
+    hint.classList.remove('busy');
+  }
+
+  let lastCode = null;
+  let saveTimer = null;
+
+  // localStorage 是同步写盘，单独防抖
+  function scheduleSave(value) {
+    clearTimeout(saveTimer);
+    saveTimer = setTimeout(() => {
+      try { localStorage.setItem(STORAGE, value); } catch { /* 忽略 */ }
+    }, 600);
   }
 
   async function render() {
-    const code = editor.value.trim();
-    stat.textContent = `${editor.value.length} 字`;
+    const raw = editor.value;
+    const code = raw.trim();
+    stat.textContent = `${raw.length} 字`;
+    scheduleSave(raw);
 
     if (!code) {
+      lastCode = '';
       canvas.innerHTML = '<div class="mmd-empty">在左边写点 Mermaid 代码试试</div>';
       clearError();
-      try { localStorage.setItem(STORAGE, ''); } catch {}
       return;
     }
+
+    // 内容没变就不重画。mermaid 一次渲染要几百毫秒，
+    // 光标移动、按住方向键这类不改变内容的事件不该触发重绘。
+    if (code === lastCode) return;
 
     // 避免并发渲染互相覆盖
     if (rendering) { pending = true; return; }
     rendering = true;
+    hint.textContent = '渲染中…';
+    hint.classList.add('busy');
 
     const id = 'mmd-' + (++seq);
     try {
       const { svg } = await mermaid.render(id, code);
       canvas.innerHTML = svg;
+      lastCode = code;
       clearError();
     } catch (err) {
-      const raw = String(err && err.message ? err.message : err);
-      showError(raw.split('\n').slice(0, 4).join('\n'));
+      // 语法错误也记下来，避免每敲一个键都重复报同一个错
+      lastCode = code;
+      const msg = String(err && err.message ? err.message : err);
+      showError(msg.split('\n').slice(0, 4).join('\n'));
     } finally {
       rendering = false;
       // mermaid 渲染失败时可能在 body 上留下临时元素，清掉
@@ -269,11 +298,9 @@ document.addEventListener('DOMContentLoaded', () => {
       });
       if (pending) { pending = false; render(); }
     }
-
-    try { localStorage.setItem(STORAGE, editor.value); } catch {}
   }
 
-  const renderDebounced = Tools.debounce(render, 400);
+  const renderDebounced = Tools.debounce(render, 600);
 
   /* ── 初始化内容 ────────────────────────────────────────────────────── */
   let restored = '';

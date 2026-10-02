@@ -27,6 +27,15 @@
     toggle.addEventListener('click', () => setOpen(!links.classList.contains('is-open')));
     links.addEventListener('click', (e) => { if (e.target.tagName === 'A') setOpen(false); });
   }
+
+  /* ── 回到顶部 ───────────────────────────────────────────────────────── */
+  const toTop = document.getElementById('to-top');
+  if (toTop) {
+    toTop.addEventListener('click', (e) => {
+      e.preventDefault();
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    });
+  }
 })();
 
 /* ══════════════════════════════════════════════════════════════════════════
