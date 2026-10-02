@@ -14,9 +14,11 @@
 ├── index.html              工具箱首页
 ├── markdown/index.html     Markdown 实时预览
 ├── mermaid/index.html      Mermaid 图表渲染
-├── lang/                   语言包 cn / en / jp（87 个键）
+├── brainfuck/index.html    Brainfuck 编辑器 + 优化解释器
+├── lang/                   语言包 cn / en / jp（136 个键）
 ├── assets/
 │   ├── lang.js             多语言实现（与主站同一套机制）
+│   ├── bf.js               Brainfuck 引擎（解析 / 优化 / 解释 / JIT）
 │   ├── tools.css           共享样式（设计令牌取自主站）
 │   ├── tools.js            共享脚本（导航 + 下载/复制/防抖等通用函数）
 │   ├── font-awesome.min.css
@@ -35,6 +37,7 @@ GitHub Pages 会把**仓库根目录映射到域名根**，所以：
 | `index.html` | `https://tools.who-young.top/` |
 | `markdown/index.html` | `https://tools.who-young.top/markdown/` |
 | `mermaid/index.html` | `https://tools.who-young.top/mermaid/` |
+| `brainfuck/index.html` | `https://tools.who-young.top/brainfuck/` |
 
 > 注意：不能把这些文件放进 `tools/` 子目录，否则地址会变成 `.../tools/markdown/`。
 
@@ -159,8 +162,70 @@ Mermaid 页的模板下拉同理，靠 `onReady` 重建 `<option>` 文字。
 用无头浏览器截图验证 i18n 有个陷阱：**截图发生在 `load` 事件附近，
 而语言包是异步 fetch 的，往往还没返回**，截出来就是中文兜底，误判成"没生效"。
 
-可靠做法是把 `load` 人为推后 —— 页面里放一张指向慢端点的图片，
-让截图发生在语言包渲染之后。见仓库外的 `_slowserver.py` + `_mkshots.mjs` 思路。
+可靠做法是把 `load` 人为推后 —— 给页面注入一张指向慢端点的图片，让截图发生在
+语言包渲染之后。具体做法：本地起一个「sleep 2.5 秒再返回 1×1 GIF」的静态服务器，
+再把 `<img src="/__slow">` 注入到页面**最后一个** `</body>` 之前（注意别用
+`String.replace` 的字符串形式 —— 它只替换第一处，而这个页面里还有一个
+`</body>` 藏在「导出 HTML」的 JS 模板字符串里，会注进字符串内部）。
+
+---
+
+## Brainfuck 引擎（`assets/bf.js`）
+
+`/brainfuck/` 用的引擎，分三层，刻意把「优化」做成**可量化**的东西：
+
+| 层 | 做什么 |
+|---|---|
+| `parse` | 源码 → 扁平 IR，顺手把连续的 `+ - < >` 合并成一条 |
+| `optimize` | IR → 树 → 多趟 peephole → 再拍平。**树化之后重写很安全**，跳转目标自动重算，不用手工维护下标 |
+| `runIR` / `compile` + `runJIT` | 后端 A：在 IR 上解释执行；后端 B：把 IR 生成 JS 源码再 `new Function` 编译 |
+
+### 实现了这些优化
+
+| 惯用法 | 折叠成 |
+|---|---|
+| `+++` `>>>` | 一条 `ADD 3` / `RIGHT 3` |
+| `[-]` `[+]` | `CLEAR` |
+| `[->+<]` `[->++>+++<<]` | `XFER`（多目标传输） |
+| `[>]` `[<<]` | `SCAN`（沿一个方向走到值为 0 的格子） |
+| `[-]+++` | `SET 3`（常量折叠） |
+| 连续赋值、被覆盖的加减 | 直接删除（死存储消除） |
+
+实测：Hello World `59 → 46` 条，谢尔宾斯基三角形 `76 → 49` 条、执行步数 29586 → 25024。
+
+### 为什么 JIT 能快一个数量级
+
+BF 的 `[ body ]` 语义**正好就是** JS 的 `while (cell) { body }`，所以可以直接生成嵌套的
+原生 while，交给 V8 去优化。实测「约 670 万步」的基准程序：解释执行 ~100–145 ms，JIT ~7–9 ms，
+**约 10–20 倍**（同一台机器上多次运行会落在这个区间，V8 的即时编译本身也有波动）。
+
+### 一个刻意的设计：步数上限只在循环边界检查
+
+不是在每条指令上查，而是只在 `JZ` / `JNZ` 处查。这样 JIT 后端能用同样稀疏的检查点，
+**两个后端在相同 `maxSteps` 下必定产出逐字节相同的输出**。否则撞上限时 JIT 会多跑完
+一整个循环体，两边截断位置不同 —— 页面上并排显示两个结果时，看起来就像其中一个算错了。
+
+安全性不受影响：任何死循环都必然经过 `JNZ`。
+
+### 测试
+
+引擎不依赖 DOM，`node` 里直接 `import` 这个文件就能用（挂在 `globalThis.BF` 上），
+所以能脱离页面做真正的测试：
+
+- **6 个示例程序**逐个验证输出：Hello World / cat / 打印 0-9 / 两数相加 / 谢尔宾斯基三角形 / 性能基准
+- **11 条优化规则**逐条断言，包含**反向**断言：当前格净减 2 的循环*不能*被折叠
+  （它跑的不是 value 次，折叠会算错）
+- **1000 个随机程序的差分测试**：优化前后的输出必须一致、JIT 与解释器必须逐字节一致
+- 解释器 vs JIT 的耗时对比
+
+跑一遍（不需要任何依赖）：
+
+```bash
+node test/bf.test.mjs
+```
+
+> 注意：这个仓库用「从分支部署」，所以 `test/` 也会被发布出去。都是纯源码，无所谓；
+> 介意的话可以在 Pages 设置里改用 Actions 部署并过滤掉它。
 
 ---
 
@@ -171,7 +236,7 @@ Mermaid 页的模板下拉同理，靠 `onReady` 重建 `<option>` 文字。
    `.tool-card-main` / `.tool-bar` / `.panes` / `.pane` / `.editor` / `.preview`
    这些现成的布局类）
 3. 在 `index.html` 首页加一张卡片
-4. 在三个页面的导航里都加一条链接
+4. 在**所有页面**的导航与页脚里都加一条链接（现在有 4 个工具页 + 首页）
 
 ---
 

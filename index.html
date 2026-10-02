@@ -40,6 +40,7 @@
       <a href="/" class="is-active" data-i18n="nav-tools">工具箱</a>
       <a href="/markdown/" data-i18n="nav-markdown">Markdown</a>
       <a href="/mermaid/" data-i18n="nav-mermaid">Mermaid</a>
+      <a href="/brainfuck/" data-i18n="nav-bf">Brainfuck</a>
       <a href="https://who-young.top" class="back"><i class="fa fa-home"></i><span data-i18n="nav-back">返回主站</span></a>
       <div class="lang-mobile">
         <select class="language-selector" aria-label="语言 / Language">
@@ -70,6 +71,9 @@
         <a class="btn-hero btn-hero-ghost" href="/mermaid/" data-i18n="hero-btn-mmd">
           Mermaid 图表 <i class='fa fa-sitemap'></i>
         </a>
+        <a class="btn-hero btn-hero-ghost" href="/brainfuck/" data-i18n="hero-btn-bf">
+          Brainfuck <i class='fa fa-microchip'></i>
+        </a>
       </div>
     </div>
   </section>
@@ -82,7 +86,7 @@
       <p data-i18n="tools-desc">两个工具都是纯前端实现，打开即用，不需要注册</p>
     </div>
 
-    <div class="grid cols-2">
+    <div class="grid cols-3">
 
       <a class="card card-hover tool-card" href="/markdown/">
         <div class="icon bg-blue"><i class="fa fa-file-text-o"></i></div>
@@ -98,6 +102,15 @@
         <h3 data-i18n="card-mmd-title">Mermaid 图表</h3>
         <p data-i18n="card-mmd-desc">
           用文本画流程图、时序图、甘特图、类图。实时预览带错误提示，画完可以导出 SVG 或 PNG。
+        </p>
+        <span class="go" data-i18n="card-open">打开工具 <i class='fa fa-arrow-right'></i></span>
+      </a>
+
+      <a class="card card-hover tool-card" href="/brainfuck/">
+        <div class="icon bg-lav"><i class="fa fa-microchip"></i></div>
+        <h3 data-i18n="card-bf-title">Brainfuck 编辑器</h3>
+        <p data-i18n="card-bf-desc">
+          只有 8 条指令的极简语言。内置优化器把常见惯用法折叠成单条指令，并把同一份中间代码分别用解释器和 JIT 跑一遍对比耗时。
         </p>
         <span class="go" data-i18n="card-open">打开工具 <i class='fa fa-arrow-right'></i></span>
       </a>
@@ -127,6 +140,7 @@
         <a href="https://who-young.top" data-i18n="footer-home">主站首页</a>
         <a href="/markdown/">Markdown</a>
         <a href="/mermaid/">Mermaid</a>
+        <a href="/brainfuck/" data-i18n="footer-bf">Brainfuck</a>
         <a href="https://who-young.top/#contact" data-i18n="footer-contact">联系我</a>
       </nav>
     </div>
