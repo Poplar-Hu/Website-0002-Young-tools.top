@@ -14,7 +14,9 @@
 ├── index.html              工具箱首页
 ├── markdown/index.html     Markdown 实时预览
 ├── mermaid/index.html      Mermaid 图表渲染
+├── lang/                   语言包 cn / en / jp（87 个键）
 ├── assets/
+│   ├── lang.js             多语言实现（与主站同一套机制）
 │   ├── tools.css           共享样式（设计令牌取自主站）
 │   ├── tools.js            共享脚本（导航 + 下载/复制/防抖等通用函数）
 │   ├── font-awesome.min.css
@@ -106,6 +108,59 @@ head -c 80 assets/vendor/mermaid.min.js
 > ⚠️ `highlight.js` 要认准 `@highlightjs/cdn-assets` 这个包。
 > `highlight.js/lib/common.min.js` 不是浏览器可用的构建 ——
 > 它只是 `require()` 列表，直接引用会得到一个 2.6 KB 的空壳。
+
+---
+
+## 多语言（i18n）
+
+与主站 `who-young.top` 是**同一套机制**：
+
+| 组成 | 位置 |
+|---|---|
+| 唯一实现 | `assets/lang.js` |
+| 文案 | `lang/cn.json` / `lang/en.json` / `lang/jp.json`（87 个键） |
+| 标记 | HTML 上写 `data-i18n="键名"`；输入框占位符写 `data-i18n-placeholder="键名"` |
+| 选择器 | `.language-selector` 类；页眉（桌面端）、移动端菜单、页脚各一个 |
+
+**兜底策略**：HTML 里直接写中文原文，语言包到达后原地替换。
+所以禁用 JS 或语言包加载失败时，页面仍是完整中文，搜索引擎也能抓到内容。
+
+### 与主站的三处差异
+
+1. **语言包路径用根路径 `/lang/`**。工具页在 `/markdown/` 这样的子目录下，
+   相对路径会被解析成 `/markdown/lang/...`。
+2. **支持 `?lang=en` URL 参数**，优先级高于 localStorage 和浏览器语言，
+   便于分享指定语言的链接。
+3. **多了两个给 JS 用的接口**：
+   - `window.i18n.t(key, vars, fallback)` —— 取动态文案，支持 `{name}` 占位符
+   - `window.i18n.onReady(fn)` —— 语言包就绪时回调，**每次切换语言都会再触发**
+
+### ⚠️ 最容易踩的坑
+
+`i18n.t()` 在语言包到达前只能返回兜底字符串。所以**凡是用 JS 写进 DOM 的动态文案**
+（字数统计、空状态、错误提示），都必须额外在 `i18n.onReady()` 里重渲染一次：
+
+```js
+if (window.i18n) i18n.onReady(() => { lastHtml = null; render(); });
+```
+
+否则切换到英文后，这些文字会一直停在中文 —— 页面看着"翻译了一半"。
+Mermaid 页的模板下拉同理，靠 `onReady` 重建 `<option>` 文字。
+
+### 改文案的流程
+
+1. 改 `lang/cn.json`，同时改 `en.json` 和 `jp.json`
+2. **键名与 `{}` 占位符三份必须完全一致**（否则会静默取不到值）
+3. 页面里 `i18n.t('键', { … }, '中文兜底')` 的兜底文字顺手同步
+4. 页面里 `data-i18n` 元素的**中文原文**也顺手同步（那是给无 JS 环境的兜底）
+
+### 验证方法
+
+用无头浏览器截图验证 i18n 有个陷阱：**截图发生在 `load` 事件附近，
+而语言包是异步 fetch 的，往往还没返回**，截出来就是中文兜底，误判成"没生效"。
+
+可靠做法是把 `load` 人为推后 —— 页面里放一张指向慢端点的图片，
+让截图发生在语言包渲染之后。见仓库外的 `_slowserver.py` + `_mkshots.mjs` 思路。
 
 ---
 

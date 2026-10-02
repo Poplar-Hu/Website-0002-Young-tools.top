@@ -4,14 +4,15 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>Markdown 预览 | Populus Hu 工具箱</title>
-<meta name="description" content="浏览器本地运行的 Markdown 实时预览工具，支持代码高亮、表格、任务列表，可导入导出。">
+<title data-i18n="page-title-md">Markdown 预览 | Populus Hu 工具箱</title>
+<meta name="description" content="浏览器本地运行的 Markdown 实时预览工具，支持代码高亮、表格、任务列表，可导入导出。" data-i18n="meta-desc-md">
 
 <link rel="icon" href="/assets/icon.ico" sizes="32x32">
 <link rel="stylesheet" href="/assets/font-awesome.min.css">
 <link rel="stylesheet" href="/assets/vendor/github.min.css">
 <link rel="stylesheet" href="/assets/tools.css">
 
+<script src="/assets/lang.js"></script>
 <script src="/assets/tools.js"></script>
 <script src="/assets/vendor/marked.min.js"></script>
 <script src="/assets/vendor/purify.min.js"></script>
@@ -22,59 +23,79 @@
 <header class="navbar" id="navbar">
   <div class="nav-decoration"></div>
   <div class="nav-inner">
-    <a class="brand" href="/">
-      <i class="fa fa-connectdevelop"></i>Populus Hu<small>工具箱</small>
-    </a>
+
+    <div class="nav-left">
+      <a class="brand" href="/">
+        <i class="fa fa-connectdevelop"></i>Populus Hu<small data-i18n="brand-tag">工具箱</small>
+      </a>
+      <div class="lang-desktop">
+        <select class="language-selector" aria-label="语言 / Language">
+        <option value="cn" selected>中文</option>
+        <option value="en">English</option>
+        <option value="jp">日本語</option>
+        </select>
+      </div>
+    </div>
+
     <button class="menu-toggle" id="menu-toggle" aria-label="菜单" aria-expanded="false" aria-controls="nav-links">
       <i class="fa fa-bars"></i>
     </button>
+
     <nav class="nav-links" id="nav-links">
-      <a href="/">工具箱</a>
-      <a href="/markdown/" class="is-active">Markdown</a>
-      <a href="/mermaid/">Mermaid</a>
-      <a href="https://who-young.top" class="back"><i class="fa fa-home mr-1"></i>返回主站</a>
+      <a href="/" data-i18n="nav-tools">工具箱</a>
+      <a href="/markdown/" class="is-active" data-i18n="nav-markdown">Markdown</a>
+      <a href="/mermaid/" data-i18n="nav-mermaid">Mermaid</a>
+      <a href="https://who-young.top" class="back"><i class="fa fa-home"></i><span data-i18n="nav-back">返回主站</span></a>
+      <div class="lang-mobile">
+        <select class="language-selector" aria-label="语言 / Language">
+        <option value="cn" selected>中文</option>
+        <option value="en">English</option>
+        <option value="jp">日本語</option>
+        </select>
+      </div>
     </nav>
+
   </div>
 </header>
 
 <main class="tool-shell wrap">
 
   <div class="tool-head">
-    <span class="badge"><i class="fa fa-file-text-o"></i> 在线工具</span>
-    <h1>Markdown 预览</h1>
-    <p>左边写、右边看。内容只留在浏览器里，可以关掉页面再回来。</p>
+    <span class="badge"><i class="fa fa-file-text-o"></i> <span data-i18n="tool-badge">在线工具</span></span>
+    <h1 data-i18n="md-title">Markdown 预览</h1>
+    <p data-i18n="md-desc">左边写、右边看。内容只留在浏览器里，可以关掉页面再回来。</p>
   </div>
 
   <div id="load-warn" class="notice notice-error hidden">
     <i class="fa fa-exclamation-triangle"></i>
-    <div>渲染库没有加载成功。如果你是用 <code>file://</code> 直接打开本页，请改用本地服务器访问。</div>
+    <div data-i18n="load-warn">渲染库没有加载成功。如果你是用 <code>file://</code> 直接打开本页，请改用本地服务器访问。</div>
   </div>
 
   <div class="tool-card-main">
 
     <div class="tool-bar">
-      <button class="btn btn-sm" id="btn-open"><i class="fa fa-folder-open-o"></i> 打开文件</button>
-      <button class="btn btn-sm" id="btn-save"><i class="fa fa-download"></i> 下载 .md</button>
-      <button class="btn btn-sm" id="btn-export"><i class="fa fa-code"></i> 导出 HTML</button>
-      <button class="btn btn-sm" id="btn-copy"><i class="fa fa-clipboard"></i> 复制 HTML</button>
+      <button class="btn btn-sm" id="btn-open"><i class="fa fa-folder-open-o"></i> <span data-i18n="md-open">打开文件</span></button>
+      <button class="btn btn-sm" id="btn-save"><i class="fa fa-download"></i> <span data-i18n="md-save">下载 .md</span></button>
+      <button class="btn btn-sm" id="btn-export"><i class="fa fa-code"></i> <span data-i18n="md-export">导出 HTML</span></button>
+      <button class="btn btn-sm" id="btn-copy"><i class="fa fa-clipboard"></i> <span data-i18n="md-copy">复制 HTML</span></button>
       <span class="spacer"></span>
       <span class="stat" id="stat">0 字 · 0 行</span>
-      <button class="btn btn-sm" id="btn-sample"><i class="fa fa-magic"></i> 示例</button>
-      <button class="btn btn-sm" id="btn-clear"><i class="fa fa-trash-o"></i> 清空</button>
+      <button class="btn btn-sm" id="btn-sample"><i class="fa fa-magic"></i> <span data-i18n="md-sample">示例</span></button>
+      <button class="btn btn-sm" id="btn-clear"><i class="fa fa-trash-o"></i> <span data-i18n="btn-clear">清空</span></button>
     </div>
 
     <div class="panes">
       <div class="pane">
         <div class="pane-label">
-          <span><i class="fa fa-pencil"></i> Markdown 源码</span>
-          <span class="side">可直接拖入 .md 文件</span>
+          <span><i class="fa fa-pencil"></i> <span data-i18n="md-pane-src">Markdown 源码</span></span>
+          <span class="side" data-i18n="md-pane-drop">可直接拖入 .md 文件</span>
         </div>
-        <textarea class="editor" id="editor" spellcheck="false"
+        <textarea class="editor" id="editor" spellcheck="false" data-i18n-placeholder="md-placeholder"
           placeholder="在这里写 Markdown…&#10;&#10;也可以把 .md 文件拖进来。"></textarea>
       </div>
       <div class="pane">
         <div class="pane-label">
-          <span><i class="fa fa-eye"></i> 预览</span>
+          <span><i class="fa fa-eye"></i> <span data-i18n="pane-preview">预览</span></span>
           <span id="hint" class="side"></span>
         </div>
         <div class="preview md-body" id="preview"></div>
@@ -89,18 +110,26 @@
     <div class="foot-top">
       <div>
         <a class="brand" href="https://who-young.top"><i class="fa fa-connectdevelop"></i>Populus Hu</a>
-        <p class="foot-desc">我的数字家园，连接你我</p>
+        <p class="foot-desc" data-i18n="footer-desc">我的数字家园，连接你我</p>
       </div>
       <nav class="foot-nav">
-        <a href="https://who-young.top">主站首页</a>
+        <a href="https://who-young.top" data-i18n="footer-home">主站首页</a>
         <a href="/">工具箱</a>
+        <a href="/markdown/" class="is-active">Markdown</a>
         <a href="/mermaid/">Mermaid</a>
-        <a href="https://who-young.top/#contact">联系我</a>
+        <a href="https://who-young.top/#contact" data-i18n="footer-contact">联系我</a>
       </nav>
     </div>
     <div class="foot-bottom">
-      <p>© 2026 Populus Hu | 保留所有权利。</p>
-      <a class="to-top" href="#top" id="to-top"><i class="fa fa-angle-up"></i> 回到顶部</a>
+      <p data-i18n="footer-copyright">© 2026 Populus Hu | 保留所有权利。</p>
+      <div class="foot-bottom-right">
+        <select class="language-selector language-selector-dark" aria-label="语言 / Language">
+        <option value="cn" selected>中文</option>
+        <option value="en">English</option>
+        <option value="jp">日本語</option>
+        </select>
+        <a class="to-top" href="#top" id="to-top"><i class="fa fa-angle-up"></i> <span data-i18n="to-top">回到顶部</span></a>
+      </div>
     </div>
   </div>
 </footer>
@@ -205,7 +234,7 @@ def fib(n: int):
       html = marked.parse(src);
     } catch (err) {
       lastHtml = null;
-      preview.innerHTML = `<div class="notice notice-error"><i class="fa fa-exclamation-triangle"></i><div>解析失败：${err.message}</div></div>`;
+      preview.innerHTML = `<div class="notice notice-error"><i class="fa fa-exclamation-triangle"></i><div>${i18n.t('md-parse-fail', { msg: err.message }, '解析失败：' + err.message)}</div></div>`;
       return;
     }
 
@@ -226,8 +255,8 @@ def fib(n: int):
 
     const chars = src.length;
     const lines = src ? src.split('\n').length : 0;
-    stat.textContent = `${chars} 字 · ${lines} 行`;
-    hint.textContent = src ? '' : '输入内容后这里会实时更新';
+    stat.textContent = i18n.t('md-stat', { chars, lines }, `${chars} 字 · ${lines} 行`);
+    hint.textContent = src ? '' : i18n.t('md-hint-empty', null, '输入内容后这里会实时更新');
 
     scheduleSave(src);
   }
@@ -240,6 +269,10 @@ def fib(n: int):
   try { restored = localStorage.getItem(STORAGE) || ''; } catch { /* 忽略 */ }
   editor.value = restored || sample;
   render();
+
+  // 语言包是异步到达的，而字数统计这类动态文案在首次 render 时只能拿到中文兜底。
+  // 语言包就绪（以及之后每次切换语言）时重渲染一次。
+  if (window.i18n) i18n.onReady(() => { lastHtml = null; render(); });
 
   editor.addEventListener('input', renderDebounced);
 
@@ -263,25 +296,26 @@ def fib(n: int):
     try {
       editor.value = await Tools.readTextFile(f);
       render();
-      Tools.toast(`已载入 ${f.name}`, 'ok');
+      Tools.toast(i18n.t('toast-loaded', { name: f.name }, `已载入 ${f.name}`), 'ok');
     } catch {
-      Tools.toast('文件读取失败', 'error');
+      Tools.toast(i18n.t('toast-read-fail', null, '文件读取失败'), 'error');
     }
     fileIn.value = '';
   });
 
   document.getElementById('btn-save').addEventListener('click', () => {
     Tools.downloadText(`markdown-${Tools.stamp()}.md`, editor.value, 'text/markdown;charset=utf-8');
-    Tools.toast('已下载 .md', 'ok');
+    Tools.toast(i18n.t('toast-saved-md', null, '已下载 .md'), 'ok');
   });
 
   document.getElementById('btn-copy').addEventListener('click', async () => {
     const ok = await Tools.copy(preview.innerHTML);
-    Tools.toast(ok ? '已复制渲染后的 HTML' : '复制失败，请手动选择', ok ? 'ok' : 'error');
+    Tools.toast(ok ? i18n.t('toast-copied-html', null, '已复制渲染后的 HTML')
+                : i18n.t('toast-copy-fail', null, '复制失败，请手动选择'), ok ? 'ok' : 'error');
   });
 
   document.getElementById('btn-export').addEventListener('click', () => {
-    const title = (editor.value.match(/^#\s+(.+)$/m) || [, 'Markdown 文档'])[1];
+    const title = (editor.value.match(/^#\s+(.+)$/m) || [, i18n.t('md-doc-title', null, 'Markdown 文档')])[1];
     const doc = `<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
@@ -306,16 +340,17 @@ def fib(n: int):
 </head>
 <body>
 ${preview.innerHTML}
+
 </body>
 </html>`;
     Tools.downloadText(`markdown-${Tools.stamp()}.html`, doc, 'text/html;charset=utf-8');
-    Tools.toast('已导出 HTML', 'ok');
+    Tools.toast(i18n.t('toast-exported-html', null, '已导出 HTML'), 'ok');
   });
 
   document.getElementById('btn-sample').addEventListener('click', () => {
     editor.value = sample;
     render();
-    Tools.toast('已载入示例', 'info');
+    Tools.toast(i18n.t('toast-sample', null, '已载入示例'), 'info');
   });
 
   document.getElementById('btn-clear').addEventListener('click', () => {
@@ -340,7 +375,7 @@ ${preview.innerHTML}
       render();
       Tools.toast(`已载入 ${f.name}`, 'ok');
     } catch {
-      Tools.toast('只能拖入文本文件', 'error');
+      Tools.toast(i18n.t('toast-text-only', null, '只能拖入文本文件'), 'error');
     }
   });
 

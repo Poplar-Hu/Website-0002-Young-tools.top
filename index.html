@@ -4,12 +4,13 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>在线工具箱 | Populus Hu</title>
-<meta name="description" content="Populus Hu 的自用小工具：Markdown 实时预览、Mermaid 图表渲染。全部在浏览器本地运行，不上传任何数据。">
+<title data-i18n="page-title">在线工具箱 | Populus Hu</title>
+<meta name="description" content="Populus Hu 的自用小工具：Markdown 实时预览、Mermaid 图表渲染。全部在浏览器本地运行，不上传任何数据。" data-i18n="meta-desc">
 
 <link rel="icon" href="/assets/icon.ico" sizes="32x32">
 <link rel="stylesheet" href="/assets/font-awesome.min.css">
 <link rel="stylesheet" href="/assets/tools.css">
+<script src="/assets/lang.js"></script>
 <script src="/assets/tools.js"></script>
 </head>
 <body>
@@ -17,64 +18,102 @@
 <header class="navbar" id="navbar">
   <div class="nav-decoration"></div>
   <div class="nav-inner">
-    <a class="brand" href="/">
-      <i class="fa fa-connectdevelop"></i>Populus Hu<small>工具箱</small>
-    </a>
+
+    <div class="nav-left">
+      <a class="brand" href="/">
+        <i class="fa fa-connectdevelop"></i>Populus Hu<small data-i18n="brand-tag">工具箱</small>
+      </a>
+      <div class="lang-desktop">
+        <select class="language-selector" aria-label="语言 / Language">
+          <option value="cn" selected>中文</option>
+          <option value="en">English</option>
+          <option value="jp">日本語</option>
+        </select>
+      </div>
+    </div>
+
     <button class="menu-toggle" id="menu-toggle" aria-label="菜单" aria-expanded="false" aria-controls="nav-links">
       <i class="fa fa-bars"></i>
     </button>
+
     <nav class="nav-links" id="nav-links">
-      <a href="/" class="is-active">工具箱</a>
-      <a href="/markdown/">Markdown</a>
-      <a href="/mermaid/">Mermaid</a>
-      <a href="https://who-young.top" class="back"><i class="fa fa-home mr-1"></i>返回主站</a>
+      <a href="/" class="is-active" data-i18n="nav-tools">工具箱</a>
+      <a href="/markdown/" data-i18n="nav-markdown">Markdown</a>
+      <a href="/mermaid/" data-i18n="nav-mermaid">Mermaid</a>
+      <a href="https://who-young.top" class="back"><i class="fa fa-home"></i><span data-i18n="nav-back">返回主站</span></a>
+      <div class="lang-mobile">
+        <select class="language-selector" aria-label="语言 / Language">
+          <option value="cn" selected>中文</option>
+          <option value="en">English</option>
+          <option value="jp">日本語</option>
+        </select>
+      </div>
     </nav>
+
   </div>
 </header>
 
 <main>
-  <section class="hero wrap">
-    <span class="badge"><i class="fa fa-wrench"></i> 在线工具</span>
-    <h1>随手可用的<br><span class="grad">在线工具箱</span></h1>
-    <p>
-      两个完全跑在浏览器本地的工具。文字和图表<strong>不会上传到任何服务器</strong>，
-      断网也能用 —— 所有依赖都放在本站，不引用外部 CDN。
-    </p>
+
+  <section class="hero">
+    <div class="hero-glow" aria-hidden="true"></div>
+    <div class="wrap">
+      <span class="badge" data-i18n="hero-badge">在线工具</span>
+      <h1 data-i18n="hero-title">随手可用的<br><span class='grad'>在线工具箱</span></h1>
+      <p data-i18n="hero-desc">
+        两个完全跑在浏览器本地的工具。文字和图表不会上传到任何服务器，断网也能用 —— 所有依赖都放在本站，不引用外部 CDN。
+      </p>
+      <div class="hero-actions">
+        <a class="btn-hero btn-hero-primary" href="/markdown/" data-i18n="hero-btn-md">
+          Markdown 预览 <i class='fa fa-file-text-o'></i>
+        </a>
+        <a class="btn-hero btn-hero-ghost" href="/mermaid/" data-i18n="hero-btn-mmd">
+          Mermaid 图表 <i class='fa fa-sitemap'></i>
+        </a>
+      </div>
+    </div>
   </section>
 
-  <section class="wrap">
+  <section class="section wrap" id="tools">
+
+    <div class="section-head">
+      <span class="badge" data-i18n="tools-badge">可用工具</span>
+      <h2 data-i18n="tools-title">挑一个开始</h2>
+      <p data-i18n="tools-desc">两个工具都是纯前端实现，打开即用，不需要注册</p>
+    </div>
+
     <div class="grid cols-2">
 
       <a class="card card-hover tool-card" href="/markdown/">
         <div class="icon bg-blue"><i class="fa fa-file-text-o"></i></div>
-        <h2>Markdown 预览</h2>
-        <p>
-          左边写、右边看，实时渲染。支持表格、任务列表、代码高亮，
-          可以直接拖入 <code>.md</code> 文件，也能导出成 HTML。
+        <h3 data-i18n="card-md-title">Markdown 预览</h3>
+        <p data-i18n="card-md-desc">
+          左边写、右边看，实时渲染。支持表格、任务列表、代码高亮，可以直接拖入 .md 文件，也能导出成 HTML。
         </p>
-        <span class="go">打开工具 <i class="fa fa-arrow-right"></i></span>
+        <span class="go" data-i18n="card-open">打开工具 <i class='fa fa-arrow-right'></i></span>
       </a>
 
       <a class="card card-hover tool-card" href="/mermaid/">
         <div class="icon bg-pink"><i class="fa fa-sitemap"></i></div>
-        <h2>Mermaid 图表</h2>
-        <p>
-          用文本画流程图、时序图、甘特图、类图。实时预览带错误提示，
-          画完可以导出 SVG 或 PNG。
+        <h3 data-i18n="card-mmd-title">Mermaid 图表</h3>
+        <p data-i18n="card-mmd-desc">
+          用文本画流程图、时序图、甘特图、类图。实时预览带错误提示，画完可以导出 SVG 或 PNG。
         </p>
-        <span class="go">打开工具 <i class="fa fa-arrow-right"></i></span>
+        <span class="go" data-i18n="card-open">打开工具 <i class='fa fa-arrow-right'></i></span>
       </a>
 
     </div>
 
     <div class="notice notice-info mt-lg">
       <i class="fa fa-info-circle"></i>
-      <div>
-        这两个工具都是纯前端实现，页面里的 Markdown 与 Mermaid 处理逻辑在本地执行。
+      <div data-i18n="note-local">
+        这两个工具都是纯前端实现，页面里的 Markdown 与 Mermaid 处理逻辑都在本地执行。
         唯一的网络请求是加载页面自身 —— 也就是说，把页面存下来，离线一样能打开。
       </div>
     </div>
+
   </section>
+
 </main>
 
 <footer class="site-footer">
@@ -82,18 +121,25 @@
     <div class="foot-top">
       <div>
         <a class="brand" href="https://who-young.top"><i class="fa fa-connectdevelop"></i>Populus Hu</a>
-        <p class="foot-desc">我的数字家园，连接你我</p>
+        <p class="foot-desc" data-i18n="footer-desc">我的数字家园，连接你我</p>
       </div>
       <nav class="foot-nav">
-        <a href="https://who-young.top">主站首页</a>
+        <a href="https://who-young.top" data-i18n="footer-home">主站首页</a>
         <a href="/markdown/">Markdown</a>
         <a href="/mermaid/">Mermaid</a>
-        <a href="https://who-young.top/#contact">联系我</a>
+        <a href="https://who-young.top/#contact" data-i18n="footer-contact">联系我</a>
       </nav>
     </div>
     <div class="foot-bottom">
-      <p>© 2026 Populus Hu | 保留所有权利。</p>
-      <a class="to-top" href="#top" id="to-top"><i class="fa fa-angle-up"></i> 回到顶部</a>
+      <p data-i18n="footer-copyright">© 2026 Populus Hu | 保留所有权利。</p>
+      <div class="foot-bottom-right">
+        <select class="language-selector language-selector-dark" aria-label="语言 / Language">
+          <option value="cn" selected>中文</option>
+          <option value="en">English</option>
+          <option value="jp">日本語</option>
+        </select>
+        <a class="to-top" href="#top" id="to-top"><i class="fa fa-angle-up"></i> <span data-i18n="to-top">回到顶部</span></a>
+      </div>
     </div>
   </div>
 </footer>
