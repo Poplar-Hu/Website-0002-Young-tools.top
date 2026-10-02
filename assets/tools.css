@@ -345,7 +345,10 @@ p { margin: 0; }
 .tool-card-main {
   background: #fff; border-radius: var(--radius-lg); box-shadow: var(--shadow-lg);
   overflow: hidden; display: flex; flex-direction: column;
-  flex: 1 1 auto; min-height: 420px;
+  /* basis 必须是 0 而不是 auto：auto 会拿【内容高度】当基准尺寸，
+     而左侧操作列表有三十多项、内容高一千多像素，整张卡片就会被撑开，
+     右侧的输出区被顶到屏幕外。basis 0 让高度由容器剩余空间决定。 */
+  flex: 1 1 0; min-height: 420px;
 }
 
 .tool-bar {
@@ -550,6 +553,101 @@ p { margin: 0; }
 
 /* 状态标记：警告态 */
 .pane-label .side.warn { color: #B45309; }
+
+/* ── 编解码工具页 ───────────────────────────────────────────────────────── */
+/* 左栏固定宽度放操作列表，右栏留给「输入 / 配方 / 输出」三段 */
+.pane-ops { flex: 0 0 254px; }
+
+.codec-search {
+  flex: 0 0 auto; display: flex; align-items: center; gap: 8px;
+  padding: 8px 12px; border-bottom: 1px solid var(--gray-200); background: #fff;
+}
+.codec-search i { color: var(--gray-400); font-size: .85rem; }
+.codec-search input {
+  flex: 1 1 auto; min-width: 0; border: 0; outline: none;
+  font-size: .85rem; background: transparent;
+}
+
+.codec-ops { flex: 1 1 auto; overflow: auto; padding: 4px 0 12px; background: #fff; }
+.codec-group {
+  padding: 10px 14px 4px; font-size: .68rem; letter-spacing: .08em;
+  color: var(--gray-400); text-transform: uppercase;
+}
+.codec-op {
+  display: flex; align-items: center; justify-content: space-between; gap: 6px;
+  width: 100%; padding: 6px 14px; border: 0; background: none; cursor: pointer;
+  font-size: .84rem; text-align: left; color: var(--gray-700);
+  transition: background .12s, color .12s;
+}
+.codec-op:hover { background: var(--soft-blue); color: var(--primary); }
+.codec-op i { font-size: .68rem; color: var(--gray-300); }
+.codec-op:hover i { color: var(--primary); }
+.codec-nomatch { padding: 16px 14px; font-size: .82rem; color: var(--gray-400); }
+
+/* 配方条：通栏放在工具栏下面，而不是挤在右侧栏里 ——
+   右侧竖着叠「输入 / 配方 / 输出」三段会把输出挤出屏幕 */
+.codec-recipebar {
+  flex: 0 0 auto; display: flex; align-items: flex-start; gap: 10px;
+  padding: 8px 14px; background: var(--soft-gray);
+  border-bottom: 1px solid var(--gray-200);
+}
+.codec-recipebar .lbl {
+  flex: 0 0 auto; padding-top: 5px; font-size: .7rem; letter-spacing: .08em;
+  color: var(--gray-400); white-space: nowrap;
+}
+.codec-recipebar .side { flex: 0 0 auto; padding-top: 5px; font-size: .72rem; color: var(--gray-400); }
+
+/* 配方 chip：可拖拽重排 */
+.codec-recipe {
+  flex: 1 1 auto; display: flex; flex-wrap: wrap; align-content: flex-start; gap: 6px;
+  min-height: 30px; max-height: 92px; overflow: auto;
+}
+.codec-empty { font-size: .78rem; color: var(--gray-400); padding: 6px 2px; }
+.codec-chip {
+  display: inline-flex; align-items: center; gap: 8px;
+  padding: 4px 6px 4px 10px; border-radius: 999px;
+  background: #fff; border: 1px solid var(--gray-200);
+  font-size: .8rem; cursor: grab; max-width: 100%;
+}
+.codec-chip.dragging { opacity: .4; }
+.codec-chip .n { white-space: nowrap; color: var(--dark); font-weight: 500; }
+.codec-chip .ps { display: inline-flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.codec-chip .p {
+  display: inline-flex; align-items: center; gap: 4px;
+  font-size: .72rem; color: var(--gray-500); white-space: nowrap;
+}
+.codec-chip .p input[type="text"], .codec-chip .p input[type="number"] {
+  width: 4.6rem; padding: 2px 6px; border: 1px solid var(--gray-200);
+  border-radius: 5px; font-size: .72rem; font-family: var(--mono);
+}
+.codec-chip .p input[type="number"] { width: 3.4rem; }
+.codec-chip .p input[type="checkbox"] { accent-color: var(--primary); margin: 0; }
+.codec-chip .x {
+  border: 0; background: none; cursor: pointer; color: var(--gray-300);
+  font-size: 1rem; line-height: 1; padding: 0 4px; border-radius: 50%;
+}
+.codec-chip .x:hover { color: var(--accent); background: var(--soft-pink); }
+
+/* 输入 / 输出 平分右侧剩余高度 */
+.codec-io { flex: 1 1 0; min-height: 90px; }
+
+/* 出错提示（动态文案，故意不带 data-i18n） */
+.codec-error {
+  flex: 0 0 auto; display: flex; align-items: flex-start; gap: 10px;
+  padding: 8px 14px; background: var(--soft-pink); color: #9F1239;
+  font-size: .8rem; line-height: 1.6;
+}
+.codec-error i { margin-top: 3px; }
+.codec-error strong { display: block; }
+
+/* 四列栅格（工具变多之后） */
+@media (min-width: 1180px) { .grid.cols-4 { grid-template-columns: repeat(4, 1fr); } }
+@media (min-width: 700px) and (max-width: 1179px) { .grid.cols-4 { grid-template-columns: repeat(2, 1fr); } }
+
+@media (max-width: 880px) {
+  .pane-ops { flex: 0 0 auto; max-height: 34vh; }
+  .codec-recipe { max-height: 132px; }
+}
 
 /* ── 页脚（结构对齐主站：所有内容都在容器内） ───────────────────────────── */
 .site-footer {

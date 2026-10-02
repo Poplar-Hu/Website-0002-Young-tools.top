@@ -15,10 +15,13 @@
 ├── markdown/index.html     Markdown 实时预览
 ├── mermaid/index.html      Mermaid 图表渲染
 ├── brainfuck/index.html    Brainfuck 编辑器 + 优化解释器
-├── lang/                   语言包 cn / en / jp（136 个键）
+├── codec/index.html        编码 / 解码工具箱（配方链）
+├── lang/                   语言包 cn / en / jp（170 个键）
+├── test/                   引擎测试（node 直接跑，不依赖浏览器）
 ├── assets/
 │   ├── lang.js             多语言实现（与主站同一套机制）
 │   ├── bf.js               Brainfuck 引擎（解析 / 优化 / 解释 / JIT）
+│   ├── codec.js            编解码引擎（32 个操作 + 配方执行）
 │   ├── tools.css           共享样式（设计令牌取自主站）
 │   ├── tools.js            共享脚本（导航 + 下载/复制/防抖等通用函数）
 │   ├── font-awesome.min.css
@@ -38,6 +41,7 @@ GitHub Pages 会把**仓库根目录映射到域名根**，所以：
 | `markdown/index.html` | `https://tools.who-young.top/markdown/` |
 | `mermaid/index.html` | `https://tools.who-young.top/mermaid/` |
 | `brainfuck/index.html` | `https://tools.who-young.top/brainfuck/` |
+| `codec/index.html` | `https://tools.who-young.top/codec/` |
 
 > 注意：不能把这些文件放进 `tools/` 子目录，否则地址会变成 `.../tools/markdown/`。
 
@@ -221,7 +225,8 @@ BF 的 `[ body ]` 语义**正好就是** JS 的 `while (cell) { body }`，所以
 跑一遍（不需要任何依赖）：
 
 ```bash
-node test/bf.test.mjs
+node test/bf.test.mjs        # Brainfuck 引擎，26 项
+node test/codec.test.mjs     # 编解码引擎，108 项
 ```
 
 > 注意：这个仓库用「从分支部署」，所以 `test/` 也会被发布出去。都是纯源码，无所谓；
@@ -237,6 +242,54 @@ node test/bf.test.mjs
    这些现成的布局类）
 3. 在 `index.html` 首页加一张卡片
 4. 在**所有页面**的导航与页脚里都加一条链接（现在有 4 个工具页 + 首页）
+
+---
+
+## 编解码引擎（`assets/codec.js`）
+
+`/codec/` 用的引擎。和 Brainfuck 那套的取舍不同：那边拼的是解释器与编译器，
+这边拼的是**多种编码的正确实现**与**可串联的流水线**。
+
+### 配方（recipe）模型
+
+数据是「文本进、文本出」，每个操作签名统一为 `run(text, params) -> string | Promise<string>`。
+需要字节时内部临时转 UTF-8，因此链式组合天然成立 ——
+`Base64 解码 → URL 解码` 这种两层嵌套就是两步的事。
+
+摘要类操作是异步的（`crypto.subtle`），所以 `runRecipe` 本身就是 async；
+出错时默认抛出（带 `step` 索引），传 `{ throwOnError: false }` 则返回出错前的结果，
+页面据此既能指出卡在第几步、又不丢掉已算出的部分。
+
+### 32 个操作
+
+| 分类 | 内容 |
+|---|---|
+| Base 编码 | Base64（含 URL 安全 / 可选补 `=`）、Base32、Base58、十六进制（大小写 / 空格分组） |
+| 文本编码 | URL（component / 整串）、HTML 实体、Unicode 转义（含星平面拆代理对）、二进制表示 |
+| 古典密码 | ROT13、ROT-N、ROT 暴力枚举（26 行）、Atbash、摩尔斯、栅栏密码、维吉尼亚 |
+| 摘要 / 校验 | CRC32、MD5（自实现）、SHA-1 / SHA-256 / SHA-512（Web Crypto） |
+| 其他 | JWT 解码（含 exp 过期判断） |
+
+> Web Crypto 不支持 MD5，所以那一份是照着 RFC 1321 直译的 —— 测试里用
+> 55 / 56 / 64 字节这几个补位边界专门验过。
+
+### 测试
+
+```bash
+node test/codec.test.mjs     # 108 项
+```
+
+- **已知向量**：RFC 4648 附录 A 的 Base64 / Base32 全部 7 组、Base58 的 bitcoin 字母表、
+  维吉尼亚的教科书例（ATTACKATDAWN + LEMON）、CRC32 标准值、MD5 的 RFC 向量与补位边界、
+  SHA-1 / 256 / 512 的 `"abc"` 向量
+- **往返测试**：11 种编码 × 12 个刁钻样本（空串 / 中文 / emoji / 空白 / 长串）
+  ＋ 每种再跑 300 个随机字符串
+- **配方**：两步链的结果、空配方、JWT 示例的解析
+- **错误处理**：每个错误码都断言到具体 code 与 step 索引
+- **注册表自检**：id 不重复、分类有效、每个操作都有 cn/en/jp 名称、示例配方都能跑通
+
+> 随机字符串里**刻意跳过 U+D800–DFFF 代理区**：孤立代理项是非法 Unicode，
+> UTF-8 编码时会变成 U+FFFD，那种字符串本来就不可逆，考验不了这些编解码器。
 
 ---
 

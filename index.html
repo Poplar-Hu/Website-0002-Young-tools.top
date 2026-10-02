@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <title data-i18n="page-title">在线工具箱 | Populus Hu</title>
-<meta name="description" content="Populus Hu 的自用小工具：Markdown 实时预览、Mermaid 图表渲染。全部在浏览器本地运行，不上传任何数据。" data-i18n="meta-desc">
+<meta name="description" content="Populus Hu 的自用小工具集：Markdown 预览、Mermaid 图表、Brainfuck 编辑器、编码解码。全部在浏览器本地运行，不上传任何数据。" data-i18n="meta-desc">
 
 <link rel="icon" href="/assets/icon.ico" sizes="32x32">
 <link rel="stylesheet" href="/assets/font-awesome.min.css">
@@ -41,6 +41,7 @@
       <a href="/markdown/" data-i18n="nav-markdown">Markdown</a>
       <a href="/mermaid/" data-i18n="nav-mermaid">Mermaid</a>
       <a href="/brainfuck/" data-i18n="nav-bf">Brainfuck</a>
+      <a href="/codec/" data-i18n="nav-codec">编解码</a>
       <a href="https://who-young.top" class="back"><i class="fa fa-home"></i><span data-i18n="nav-back">返回主站</span></a>
       <div class="lang-mobile">
         <select class="language-selector" aria-label="语言 / Language">
@@ -62,7 +63,7 @@
       <span class="badge" data-i18n="hero-badge">在线工具</span>
       <h1 data-i18n="hero-title">随手可用的<br><span class='grad'>在线工具箱</span></h1>
       <p data-i18n="hero-desc">
-        两个完全跑在浏览器本地的工具。文字和图表不会上传到任何服务器，断网也能用 —— 所有依赖都放在本站，不引用外部 CDN。
+        这些工具完全跑在浏览器本地。文字和图表不会上传到任何服务器，断网也能用 —— 所有依赖都放在本站，不引用外部 CDN。
       </p>
       <div class="hero-actions">
         <a class="btn-hero btn-hero-primary" href="/markdown/" data-i18n="hero-btn-md">
@@ -74,6 +75,9 @@
         <a class="btn-hero btn-hero-ghost" href="/brainfuck/" data-i18n="hero-btn-bf">
           Brainfuck <i class='fa fa-microchip'></i>
         </a>
+        <a class="btn-hero btn-hero-ghost" href="/codec/" data-i18n="hero-btn-codec">
+          编解码 <i class='fa fa-exchange'></i>
+        </a>
       </div>
     </div>
   </section>
@@ -83,10 +87,10 @@
     <div class="section-head">
       <span class="badge" data-i18n="tools-badge">可用工具</span>
       <h2 data-i18n="tools-title">挑一个开始</h2>
-      <p data-i18n="tools-desc">两个工具都是纯前端实现，打开即用，不需要注册</p>
+      <p data-i18n="tools-desc">纯前端实现，打开即用，不需要注册</p>
     </div>
 
-    <div class="grid cols-3">
+    <div class="grid cols-4">
 
       <a class="card card-hover tool-card" href="/markdown/">
         <div class="icon bg-blue"><i class="fa fa-file-text-o"></i></div>
@@ -106,6 +110,15 @@
         <span class="go" data-i18n="card-open">打开工具 <i class='fa fa-arrow-right'></i></span>
       </a>
 
+      <a class="card card-hover tool-card" href="/codec/">
+        <div class="icon bg-green"><i class="fa fa-exchange"></i></div>
+        <h3 data-i18n="card-codec-title">编码 / 解码工具箱</h3>
+        <p data-i18n="card-codec-desc">
+          32 种常用编解码，可串成配方链：Base64 / 十六进制 / URL / 摩尔斯 / ROT / 栅栏 / 维吉尼亚 / MD5 / SHA / JWT …… 全部在浏览器本地完成。
+        </p>
+        <span class="go" data-i18n="card-open">打开工具 <i class='fa fa-arrow-right'></i></span>
+      </a>
+
       <a class="card card-hover tool-card" href="/brainfuck/">
         <div class="icon bg-lav"><i class="fa fa-microchip"></i></div>
         <h3 data-i18n="card-bf-title">Brainfuck 编辑器</h3>
@@ -119,10 +132,9 @@
 
     <div class="notice notice-info mt-lg">
       <i class="fa fa-info-circle"></i>
-      <div data-i18n="note-local">
-        这两个工具都是纯前端实现，页面里的 Markdown 与 Mermaid 处理逻辑都在本地执行。
-        唯一的网络请求是加载页面自身 —— 也就是说，把页面存下来，离线一样能打开。
-      </div>
+      <!-- 兜底原文必须与 lang/cn.json 一致，且**不能跨行**：
+           HTML 会把换行渲染成一个空格，那样无 JS 时看到的文案会多一个空格 -->
+      <div data-i18n="note-local">这些工具都是纯前端实现，页面里的处理逻辑都在本地执行。唯一的网络请求是加载页面自身 —— 也就是说，把页面存下来，离线一样能打开。</div>
     </div>
 
   </section>
@@ -141,6 +153,7 @@
         <a href="/markdown/">Markdown</a>
         <a href="/mermaid/">Mermaid</a>
         <a href="/brainfuck/" data-i18n="footer-bf">Brainfuck</a>
+        <a href="/codec/" data-i18n="footer-codec">编解码</a>
         <a href="https://who-young.top/#contact" data-i18n="footer-contact">联系我</a>
       </nav>
     </div>

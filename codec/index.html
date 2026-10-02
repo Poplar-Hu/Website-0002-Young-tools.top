@@ -1,0 +1,459 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title data-i18n="page-title-codec">编码 / 解码工具箱 | Populus Hu 工具箱</title>
+<meta name="description" content="浏览器本地运行的编解码工具箱：Base64 / Base32 / Base58 / 十六进制 / URL / HTML 实体 / Unicode 转义 / 摩尔斯 / ROT / 栅栏 / 维吉尼亚 / MD5 / SHA / JWT，可串成配方链依次执行。" data-i18n="meta-desc-codec">
+
+<link rel="icon" href="/assets/icon.ico" sizes="32x32">
+<link rel="stylesheet" href="/assets/font-awesome.min.css">
+<link rel="stylesheet" href="/assets/tools.css">
+
+<script src="/assets/lang.js"></script>
+<script src="/assets/tools.js"></script>
+<script src="/assets/codec.js"></script>
+</head>
+<body>
+
+<header class="navbar" id="navbar">
+  <div class="nav-decoration"></div>
+  <div class="nav-inner">
+
+    <div class="nav-left">
+      <a class="brand" href="/">
+        <i class="fa fa-connectdevelop"></i>Populus Hu<small data-i18n="brand-tag">工具箱</small>
+      </a>
+      <div class="lang-desktop">
+        <select class="language-selector" aria-label="语言 / Language">
+          <option value="cn" selected>中文</option>
+          <option value="en">English</option>
+          <option value="jp">日本語</option>
+        </select>
+      </div>
+    </div>
+
+    <button class="menu-toggle" id="menu-toggle" aria-label="菜单" aria-expanded="false" aria-controls="nav-links">
+      <i class="fa fa-bars"></i>
+    </button>
+
+    <nav class="nav-links" id="nav-links">
+      <a href="/" data-i18n="nav-tools">工具箱</a>
+      <a href="/markdown/" data-i18n="nav-markdown">Markdown</a>
+      <a href="/mermaid/" data-i18n="nav-mermaid">Mermaid</a>
+      <a href="/brainfuck/" data-i18n="nav-bf">Brainfuck</a>
+      <a href="/codec/" class="is-active" data-i18n="nav-codec">编解码</a>
+      <a href="https://who-young.top" class="back"><i class="fa fa-home"></i><span data-i18n="nav-back">返回主站</span></a>
+      <div class="lang-mobile">
+        <select class="language-selector" aria-label="语言 / Language">
+          <option value="cn" selected>中文</option>
+          <option value="en">English</option>
+          <option value="jp">日本語</option>
+        </select>
+      </div>
+    </nav>
+
+  </div>
+</header>
+
+<main class="tool-shell wrap">
+
+  <div class="tool-head">
+    <span class="badge"><i class="fa fa-exchange"></i> <span data-i18n="tool-badge">在线工具</span></span>
+    <h1 data-i18n="codec-title">编码 / 解码工具箱</h1>
+    <p data-i18n="codec-desc">左边点操作加到「配方」里，右侧实时转换。多个操作会串成一条链依次执行 —— 像「先 Base64 解码、再 URL 解码」这种两层嵌套就是两步的事。</p>
+  </div>
+
+  <div id="load-warn" class="notice notice-error hidden">
+    <i class="fa fa-exclamation-triangle"></i>
+    <div data-i18n="load-warn">渲染库没有加载成功。如果你是用 <code>file://</code> 直接打开本页，请改用本地服务器访问。</div>
+  </div>
+
+  <div class="tool-card-main">
+
+    <div class="tool-bar">
+      <select id="sample" aria-label="示例配方"></select>
+      <button class="btn btn-sm" id="btn-swap"><i class="fa fa-exchange"></i> <span data-i18n="codec-swap">输出 → 输入</span></button>
+      <button class="btn btn-sm" id="btn-copy"><i class="fa fa-clipboard"></i> <span data-i18n="codec-copy">复制输出</span></button>
+      <button class="btn btn-sm" id="btn-clear"><i class="fa fa-trash-o"></i> <span data-i18n="codec-clear">清空配方</span></button>
+      <span class="spacer"></span>
+      <span class="stat" id="status"></span>
+    </div>
+
+    <div class="codec-recipebar">
+      <span class="lbl"><i class="fa fa-filter"></i> <span data-i18n="codec-recipe">配方</span></span>
+      <div class="codec-recipe" id="recipe"></div>
+      <span class="side" id="recipelabel"></span>
+    </div>
+
+    <div class="panes">
+
+      <div class="pane pane-ops">
+        <div class="pane-label">
+          <span><i class="fa fa-list-ul"></i> <span data-i18n="codec-ops">操作</span></span>
+          <span class="side" id="opcount"></span>
+        </div>
+        <div class="codec-search">
+          <i class="fa fa-search"></i>
+          <input type="search" id="search" data-i18n-placeholder="codec-search" placeholder="搜索操作…">
+        </div>
+        <div class="codec-ops" id="ops"></div>
+      </div>
+
+      <div class="pane">
+        <div class="pane-label">
+          <span><i class="fa fa-sign-in"></i> <span data-i18n="codec-input">输入</span></span>
+          <span class="side" id="inlen"></span>
+        </div>
+        <textarea class="editor codec-io" id="input" spellcheck="false"></textarea>
+
+        <div class="pane-label">
+          <span><i class="fa fa-sign-out"></i> <span data-i18n="codec-output">输出</span></span>
+          <span class="side" id="outlen"></span>
+        </div>
+        <div class="codec-error hidden" id="errbox">
+          <i class="fa fa-exclamation-triangle"></i>
+          <div><strong id="errstep"></strong><div id="errmsg"></div></div>
+        </div>
+        <textarea class="editor codec-io" id="output" readonly></textarea>
+      </div>
+
+    </div>
+  </div>
+
+  <div class="notice notice-info mt-lg">
+    <i class="fa fa-lightbulb-o"></i>
+    <div data-i18n="codec-note">
+      全部在浏览器本地完成，输入不会离开你的机器。摘要类操作（MD5 / SHA）走的是
+      Web Crypto 与自实现的 MD5；注意它们是<b>单向</b>的，链上没法再解回去。
+    </div>
+  </div>
+
+</main>
+
+<footer class="site-footer">
+  <div class="wrap">
+    <div class="foot-top">
+      <div>
+        <a class="brand" href="https://who-young.top"><i class="fa fa-connectdevelop"></i>Populus Hu</a>
+        <p class="foot-desc" data-i18n="footer-desc">我的数字家园，连接你我</p>
+      </div>
+      <nav class="foot-nav">
+        <a href="https://who-young.top" data-i18n="footer-home">主站首页</a>
+        <a href="/">工具箱</a>
+        <a href="/markdown/">Markdown</a>
+        <a href="/mermaid/">Mermaid</a>
+        <a href="/brainfuck/">Brainfuck</a>
+        <a href="/codec/" data-i18n="footer-codec">编解码</a>
+        <a href="https://who-young.top/#contact" data-i18n="footer-contact">联系我</a>
+      </nav>
+    </div>
+    <div class="foot-bottom">
+      <p data-i18n="footer-copyright">© 2026 Populus Hu | 保留所有权利。</p>
+      <div class="foot-bottom-right">
+        <select class="language-selector language-selector-dark" aria-label="语言 / Language">
+          <option value="cn" selected>中文</option>
+          <option value="en">English</option>
+          <option value="jp">日本語</option>
+        </select>
+        <a class="to-top" href="#top" id="to-top"><i class="fa fa-angle-up"></i> <span data-i18n="to-top">回到顶部</span></a>
+      </div>
+    </div>
+  </div>
+</footer>
+
+<script>
+(() => {
+  'use strict';
+
+  const inputEl = document.getElementById('input');
+  const outputEl = document.getElementById('output');
+  const opsEl = document.getElementById('ops');
+  const recipeEl = document.getElementById('recipe');
+  const searchEl = document.getElementById('search');
+  const statusEl = document.getElementById('status');
+  const errBox = document.getElementById('errbox');
+  const errStep = document.getElementById('errstep');
+  const errMsg = document.getElementById('errmsg');
+  const sampleEl = document.getElementById('sample');
+  const opCountEl = document.getElementById('opcount');
+  const inLenEl = document.getElementById('inlen');
+  const outLenEl = document.getElementById('outlen');
+  const recipeLabelEl = document.getElementById('recipelabel');
+  const STORAGE = 'tools.codec.state';
+
+  if (!window.Codec) {
+    document.getElementById('load-warn').classList.remove('hidden');
+    return;
+  }
+  const C = window.Codec;
+  const T = (k, vars, fb) => (window.i18n ? i18n.t(k, vars, fb) : fb || k);
+  const lang = () => (window.i18n ? i18n.current() : 'cn');
+  const pick = (obj) => (obj && (obj[lang()] || obj.cn)) || '';
+
+  /** 当前配方：[{id, params}] */
+  let recipe = [];
+
+  /* ── 操作列表 ──────────────────────────────────────────────────────── */
+  function renderOps() {
+    const q = searchEl.value.trim().toLowerCase();
+    const groups = new Map();
+    for (const op of C.OPS) {
+      const label = pick(op.name);
+      if (q && !label.toLowerCase().includes(q) && !op.id.includes(q)) continue;
+      if (!groups.has(op.cat)) groups.set(op.cat, []);
+      groups.get(op.cat).push(op);
+    }
+
+    if (!groups.size) {
+      opsEl.innerHTML = `<div class="codec-nomatch">${T('codec-no-match', null, '没有匹配的操作')}</div>`;
+      opCountEl.textContent = '';
+      return;
+    }
+
+    const parts = [];
+    for (const [cat, list] of groups) {
+      parts.push(`<div class="codec-group">${pick(C.CATS[cat])}</div>`);
+      for (const op of list) {
+        parts.push(`<button type="button" class="codec-op" data-id="${op.id}">${pick(op.name)}` +
+          (op.params && op.params.length ? '<i class="fa fa-sliders"></i>' : '') + '</button>');
+      }
+    }
+    opsEl.innerHTML = parts.join('');
+
+    let shown = 0;
+    for (const list of groups.values()) shown += list.length;
+    opCountEl.textContent = shown + ' / ' + C.OPS.length;
+  }
+
+  /* ── 配方 ──────────────────────────────────────────────────────────── */
+  function defaultParams(op) {
+    const p = {};
+    for (const def of op.params || []) p[def.key] = def.def;
+    return p;
+  }
+
+  function renderRecipe() {
+    if (!recipe.length) {
+      recipeEl.innerHTML = `<div class="codec-empty">${T('codec-empty-recipe', null, '还没有步骤 —— 从左边点一个操作加进来')}</div>`;
+      recipeLabelEl.textContent = '';
+      return;
+    }
+    recipeLabelEl.textContent = recipe.length + ' / ' + C.OPS.length;
+
+    recipeEl.innerHTML = recipe.map((step, i) => {
+      const op = C.OPS_BY_ID.get(step.id);
+      if (!op) return '';
+      const params = (op.params || []).map((def) => {
+        const v = step.params[def.key];
+        if (def.type === 'bool') {
+          return `<label class="p"><input type="checkbox" data-i="${i}" data-k="${def.key}"${v ? ' checked' : ''}> ${pick(def.label)}</label>`;
+        }
+        if (def.type === 'number') {
+          return `<label class="p">${pick(def.label)}<input type="number" data-i="${i}" data-k="${def.key}" value="${v}" min="${def.min}" max="${def.max}"></label>`;
+        }
+        return `<label class="p">${pick(def.label)}<input type="text" data-i="${i}" data-k="${def.key}" value="${String(v).replace(/"/g, '&quot;')}"></label>`;
+      }).join('');
+      return `<div class="codec-chip" draggable="true" data-i="${i}">` +
+        `<span class="n">${i + 1}. ${pick(op.name)}</span>` +
+        (params ? `<span class="ps">${params}</span>` : '') +
+        `<button type="button" class="x" data-del="${i}" title="×">×</button></div>`;
+    }).join('');
+  }
+
+  /* ── 执行 ──────────────────────────────────────────────────────────── */
+  let runToken = 0;
+
+  async function run() {
+    const text = inputEl.value;
+    inLenEl.textContent = text.length + '';
+
+    if (!recipe.length) {
+      outputEl.value = text;
+      outLenEl.textContent = text.length + '';
+      recipeLabelEl.textContent = '';
+      hideError();
+      statusEl.textContent = '';
+      return;
+    }
+
+    const token = ++runToken;
+    statusEl.textContent = T('codec-running', null, '转换中…');
+
+    const res = await C.runRecipe(text, recipe, { throwOnError: false });
+    if (token !== runToken) return;   // 已经有更新的一次在跑了
+
+    outputEl.value = res.text;
+    outLenEl.textContent = res.text.length + '';
+
+    if (res.error) {
+      const op = C.OPS_BY_ID.get(recipe[res.error.step].id);
+      errStep.textContent = T('err-at-step', { n: res.error.step + 1, name: op ? pick(op.name) : recipe[res.error.step].id },
+        `第 ${res.error.step + 1} 步出错`);
+      errMsg.textContent = T('err-' + res.error.code, Object.assign({ what: 'data' }, res.error.vars),
+        res.error.code);
+      errBox.classList.remove('hidden');
+      statusEl.textContent = '⚠ ' + errStep.textContent;
+      return;
+    }
+
+    hideError();
+    statusEl.textContent = T('codec-stat',
+      { in: text.length, out: res.text.length, n: res.steps.length, ms: res.ms.toFixed(1) },
+      `${text.length} → ${res.text.length} 字符`);
+    save();
+  }
+
+  const hideError = () => errBox.classList.add('hidden');
+
+  const runDebounced = Tools.debounce(run, 200);
+
+  /* ── 事件 ──────────────────────────────────────────────────────────── */
+
+  // 左侧点操作 → 追加到配方末尾
+  opsEl.addEventListener('click', (e) => {
+    const btn = e.target.closest('.codec-op');
+    if (!btn) return;
+    const op = C.OPS_BY_ID.get(btn.dataset.id);
+    if (!op) return;
+    recipe.push({ id: op.id, params: defaultParams(op) });
+    renderRecipe();
+    run();
+  });
+
+  // 配方区：删步骤 / 改参数
+  recipeEl.addEventListener('click', (e) => {
+    const del = e.target.closest('[data-del]');
+    if (del) {
+      recipe.splice(Number(del.dataset.del), 1);
+      renderRecipe();
+      run();
+    }
+  });
+  recipeEl.addEventListener('input', (e) => {
+    const el = e.target;
+    if (el.dataset.k === undefined) return;
+    const step = recipe[Number(el.dataset.i)];
+    if (!step) return;
+    step.params[el.dataset.k] = el.type === 'checkbox' ? el.checked
+      : el.type === 'number' ? Number(el.value) : el.value;
+    runDebounced();
+  });
+
+  // 拖拽重排 —— 链式转换里顺序很重要
+  let dragFrom = -1;
+  recipeEl.addEventListener('dragstart', (e) => {
+    const chip = e.target.closest('.codec-chip');
+    if (!chip) return;
+    dragFrom = Number(chip.dataset.i);
+    chip.classList.add('dragging');
+    e.dataTransfer.effectAllowed = 'move';
+    try { e.dataTransfer.setData('text/plain', String(dragFrom)); } catch { /* 某些环境不允许 */ }
+  });
+  recipeEl.addEventListener('dragend', () => {
+    dragFrom = -1;
+    recipeEl.querySelectorAll('.dragging').forEach((el) => el.classList.remove('dragging'));
+  });
+  recipeEl.addEventListener('dragover', (e) => {
+    if (dragFrom < 0) return;
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+  });
+  recipeEl.addEventListener('drop', (e) => {
+    if (dragFrom < 0) return;
+    e.preventDefault();
+    const chip = e.target.closest('.codec-chip');
+    if (!chip) return;
+    const to = Number(chip.dataset.i);
+    if (to === dragFrom) return;
+    const [moved] = recipe.splice(dragFrom, 1);
+    recipe.splice(to, 0, moved);
+    dragFrom = -1;
+    renderRecipe();
+    run();
+  });
+
+  searchEl.addEventListener('input', Tools.debounce(renderOps, 120));
+  inputEl.addEventListener('input', () => { inLenEl.textContent = inputEl.value.length + ''; runDebounced(); });
+
+  document.getElementById('btn-swap').addEventListener('click', () => {
+    inputEl.value = outputEl.value;
+    inLenEl.textContent = inputEl.value.length + '';
+    run();
+    Tools.toast(T('codec-toast-swapped', null, '已把输出移到输入，配方保留'), 'info');
+  });
+
+  document.getElementById('btn-copy').addEventListener('click', async () => {
+    const ok = await Tools.copy(outputEl.value);
+    Tools.toast(ok ? T('codec-toast-copied', null, '已复制输出')
+                   : T('codec-toast-copyfail', null, '复制失败，请手动选择'), ok ? 'ok' : 'error');
+  });
+
+  document.getElementById('btn-clear').addEventListener('click', () => {
+    recipe = [];
+    renderRecipe();
+    run();
+  });
+
+  sampleEl.addEventListener('change', () => {
+    const id = sampleEl.value;
+    if (!id) return;
+    const s = C.SAMPLES.find((x) => x.id === id);
+    if (!s) return;
+    inputEl.value = s.input;
+    recipe = s.recipe.map((r) => ({ id: r.id, params: Object.assign(defaultParams(C.OPS_BY_ID.get(r.id)), r.params) }));
+    renderRecipe();
+    run();
+    Tools.toast(T('codec-toast-sample', { name: pick(s.name) }, `已载入「${pick(s.name)}」`), 'info');
+    sampleEl.value = id;   // 保持显示当前示例
+  });
+
+  /* ── 示例下拉 ──────────────────────────────────────────────────────── */
+  function renderSamples() {
+    const keep = sampleEl.value;
+    sampleEl.innerHTML = '';
+    sampleEl.appendChild(new Option(T('codec-sample', null, '示例配方'), ''));
+    for (const s of C.SAMPLES) sampleEl.appendChild(new Option(pick(s.name), s.id));
+    sampleEl.value = keep && C.SAMPLES.some((s) => s.id === keep) ? keep : '';
+  }
+
+  /* ── 持久化（配方 + 输入） ─────────────────────────────────────────── */
+  let saveTimer = null;
+  function save() {
+    clearTimeout(saveTimer);
+    saveTimer = setTimeout(() => {
+      try { localStorage.setItem(STORAGE, JSON.stringify({ input: inputEl.value, recipe })); } catch { /* 忽略 */ }
+    }, 700);
+  }
+
+  /* ── 初始化 ────────────────────────────────────────────────────────── */
+  let restored = null;
+  try { restored = JSON.parse(localStorage.getItem(STORAGE) || 'null'); } catch { /* 忽略 */ }
+
+  if (restored && typeof restored.input === 'string' && Array.isArray(restored.recipe)) {
+    inputEl.value = restored.input;
+    recipe = restored.recipe.filter((r) => C.OPS_BY_ID.has(r.id))
+      .map((r) => ({ id: r.id, params: Object.assign(defaultParams(C.OPS_BY_ID.get(r.id)), r.params) }));
+  } else {
+    // 首次进来直接给一个能看出效果的例子，而不是空白
+    const s = C.SAMPLES[1];
+    inputEl.value = s.input;
+    recipe = s.recipe.map((r) => ({ id: r.id, params: Object.assign(defaultParams(C.OPS_BY_ID.get(r.id)), r.params) }));
+  }
+
+  // 注意：status / opcount / 长度这些是动态文案，故意都不带 data-i18n，
+  // 否则语言包异步到达时会把它们冲掉（Brainfuck 页踩过这个坑）
+  renderOps();
+  renderRecipe();
+  renderSamples();
+  run();
+
+  if (window.i18n) {
+    i18n.onReady(() => { renderOps(); renderRecipe(); renderSamples(); run(); });
+  }
+})();
+</script>
+
+</body>
+</html>
